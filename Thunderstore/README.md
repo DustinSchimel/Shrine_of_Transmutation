@@ -1,3 +1,3 @@
-# My first mod
+# RiskOfGambling
 
-Description.
+WIP mod.

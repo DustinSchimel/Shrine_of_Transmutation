@@ -1,6 +1,6 @@
 ﻿using BepInEx.Logging;
 
-namespace ExamplePlugin
+namespace RiskOfGambling
 {
     internal static class Log
     {
