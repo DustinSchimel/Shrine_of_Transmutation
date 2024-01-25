@@ -1,6 +1,8 @@
 using BepInEx;
 using R2API;
 using RoR2;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -46,7 +48,7 @@ namespace RiskOfGambling
 
             #region Prepping the Asset
             // In-game name
-            gamblingMachine.name = "Gamba";
+            gamblingMachine.name = "GamblingMachine";
 
             // Added for for multiplayer compatability
             gamblingMachine.AddComponent<NetworkIdentity>();
@@ -68,10 +70,10 @@ namespace RiskOfGambling
             GamblingMachineManager mgr = gamblingMachine.AddComponent<GamblingMachineManager>();
 
             // What the shrine displays when near
-            interaction.contextToken = "Anita Max Wynn (E to lose money)";
+            interaction.contextToken = "Anita Max Wynn";
 
             // What the shrine displays on ping
-            interaction.NetworkdisplayNameToken = "Anita Max Wynn (E to lose money)";
+            interaction.NetworkdisplayNameToken = "Anita Max Wynn";
 
             mgr.purchaseInteraction = interaction;
 
@@ -87,6 +89,8 @@ namespace RiskOfGambling
             // EntityLocator is necessary for the interactable highlight
             trigger.AddComponent<EntityLocator>().entity = gamblingMachine;
             #endregion
+
+            ShopTerminalBehavior terminalBehavior = gamblingMachine.AddComponent<ShopTerminalBehavior>();
 
             #region SpawnCard
             InteractableSpawnCard interactableSpawnCard = ScriptableObject.CreateInstance<InteractableSpawnCard>();
@@ -109,7 +113,7 @@ namespace RiskOfGambling
 
             DirectorCard directorCard = new DirectorCard
             {
-                selectionWeight = 100, // The higher this number the more common it'll be, for reference a normal chest is about 230
+                selectionWeight = 1000, // The higher this number the more common it'll be, for reference a normal chest is about 230
                 spawnCard = interactableSpawnCard,
             };
 
@@ -139,7 +143,7 @@ namespace RiskOfGambling
         // The Update() method is run on every frame of the game.
         private void Update()
         {
-            
+
         }
     }
 
@@ -147,6 +151,13 @@ namespace RiskOfGambling
     {
         public PurchaseInteraction purchaseInteraction;
         private GameObject shrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab").WaitForCompletion();
+        private Xoroshiro128Plus rng;
+
+        //private bool hasWhiteItem = false;
+        //private bool hasGreenItem = false;
+        //private bool hasRedItem = false;
+
+        private ArrayList rngArray;
 
         public void Start()
         {
@@ -155,7 +166,17 @@ namespace RiskOfGambling
                 purchaseInteraction.SetAvailable(true);
             }
 
+            //purchaseInteraction.costType = CostTypeIndex.WhiteItem;
+            //purchaseInteraction.automaticallyScaleCostWithDifficulty = true;
+            //purchaseInteraction.ShouldShowOnScanner(true);
+            //purchaseInteraction.cost = 50;
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
+        }
+
+        public void Awake()
+        {
+            rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
+            rngArray = new ArrayList();
         }
 
         [Server]
@@ -167,6 +188,11 @@ namespace RiskOfGambling
                 return;
             }
 
+            if (!CanBeAffordedByInteractor(interactor))
+            {
+                return;
+            }
+
             EffectManager.SpawnEffect(shrineUseEffect, new EffectData()
             {
                 origin = gameObject.transform.position,
@@ -175,7 +201,122 @@ namespace RiskOfGambling
                 color = Color.cyan
             }, true);
 
-            Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Anita Max Wynn</color></style>" });
+            Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Anita Max Wynn 66666</color></style>" });
+
+            CharacterBody character = interactor.GetComponent<CharacterBody>();
+            CostTypeDef costTypeDef = RandomizeCostType();
+            ItemIndex itemIndex = ItemIndex.None;
+            ShopTerminalBehavior component2 = GetComponent<ShopTerminalBehavior>();
+
+            if ((bool)component2)
+            {
+                itemIndex = PickupCatalog.GetPickupDef(component2.CurrentPickupIndex())?.itemIndex ?? ItemIndex.None;
+            }
+            CostTypeDef.PayCostResults payCostResults = costTypeDef.PayCost(1, interactor, base.gameObject, rng, itemIndex);
+            foreach (ItemIndex item in payCostResults.itemsTaken)
+            {
+                CreateItemTakenOrb(character.corePosition, base.gameObject, item);
+                if (item != itemIndex)
+                {
+                    //PurchaseInteraction.onItemSpentOnPurchase?.Invoke(this, activator);
+                }
+            }
+
+            //interactor.GetInstanceID();
+
+
+        }
+
+        public bool CanBeAffordedByInteractor(Interactor activator)
+        {
+            bool hasWhiteItem = false;
+            bool hasGreenItem = false;
+            bool hasRedItem = false;
+
+            if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.WhiteItem).IsAffordable(1, activator))
+            {
+                hasWhiteItem = true;
+                rngArray.Add(CostTypeIndex.WhiteItem);
+            }
+
+            if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.GreenItem).IsAffordable(1, activator))
+            {
+                hasGreenItem = true;
+                rngArray.Add(CostTypeIndex.GreenItem);
+            }
+
+            if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.RedItem).IsAffordable(1, activator))
+            {
+                hasRedItem = true;
+                rngArray.Add(CostTypeIndex.RedItem);
+            }
+
+            // Determines if the player can afford to gamble (checking if they have at least 1 white, green, or red item). 
+            return hasWhiteItem || hasGreenItem || hasRedItem;
+        }
+
+        public CostTypeDef RandomizeCostType()
+        {
+            int index = rng.RangeInt(0, rngArray.Count);
+            CostTypeIndex costType = (CostTypeIndex)rngArray[index];
+            rngArray.Clear();
+
+            return CostTypeCatalog.GetCostTypeDef(costType);
+        }
+
+        public void OnInteractionBegin(Interactor activator)
+        {
+            if (!CanBeAffordedByInteractor(activator))
+            {
+                return;
+            }
+
+            CharacterBody character = activator.GetComponent<CharacterBody>();
+            CostTypeDef costTypeDef = RandomizeCostType();
+            ItemIndex itemIndex = ItemIndex.None;
+            ShopTerminalBehavior component2 = GetComponent<ShopTerminalBehavior>();
+            if ((bool)component2)
+            {
+                itemIndex = PickupCatalog.GetPickupDef(component2.CurrentPickupIndex())?.itemIndex ?? ItemIndex.None;
+            }
+            CostTypeDef.PayCostResults payCostResults = costTypeDef.PayCost(1, activator, base.gameObject, rng, itemIndex);
+            foreach (ItemIndex item in payCostResults.itemsTaken)
+            {
+                CreateItemTakenOrb(character.corePosition, base.gameObject, item);
+                if (item != itemIndex)
+                {
+                    //PurchaseInteraction.onItemSpentOnPurchase?.Invoke(this, activator);
+                }
+            }
+            /*
+            foreach (EquipmentIndex item2 in payCostResults.equipmentTaken)
+            {
+                PurchaseInteraction.onEquipmentSpentOnPurchase?.Invoke(this, activator, item2);
+            }
+            */
+            //IEnumerable<StatDef> statDefsToIncrement = purchaseStatNames.Select(StatDef.Find);
+            //StatManager.OnPurchase(component, costType, statDefsToIncrement);
+            //onPurchase.Invoke(activator);
+            //lastActivator = activator;
+        }
+
+        [Server]
+        public static void CreateItemTakenOrb(Vector3 effectOrigin, GameObject targetObject, ItemIndex itemIndex)
+        {
+            if (!NetworkServer.active)
+            {
+                Debug.LogWarning("[Server] function 'System.Void RoR2.PurchaseInteraction::CreateItemTakenOrb(UnityEngine.Vector3,UnityEngine.GameObject,RoR2.ItemIndex)' called on client");
+                return;
+            }
+            GameObject effectPrefab = LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/OrbEffects/ItemTakenOrbEffect");
+            EffectData effectData = new EffectData
+            {
+                origin = effectOrigin,
+                genericFloat = 1.5f,
+                genericUInt = (uint)(itemIndex + 1)
+            };
+            effectData.SetNetworkedObjectReference(targetObject);
+            EffectManager.SpawnEffect(effectPrefab, effectData, transmit: true);
         }
     }
 }
