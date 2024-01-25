@@ -35,7 +35,7 @@ namespace RiskOfGambling
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Xerphy";
         public const string PluginName = "RiskOfGambling";
-        public const string PluginVersion = "0.2";
+        public const string PluginVersion = "0.3";
 
         private GameObject gamblingMachine = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/mdlBeetle.fbx").WaitForCompletion(), "BeebleMemorialStatue");
         private Material gamblingMachineMat = Addressables.LoadAssetAsync<Material>("RoR2/Base/MonstersOnShrineUse/matMonstersOnShrineUse.mat").WaitForCompletion();
@@ -209,8 +209,6 @@ namespace RiskOfGambling
                 scale = 3f,
                 color = Color.cyan
             }, true);
-
-            Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Anita Max Wynn 66666</color></style>" });
 
             CharacterBody character = interactor.GetComponent<CharacterBody>();
             CostTypeDef costTypeDef = RandomizeCostType();
