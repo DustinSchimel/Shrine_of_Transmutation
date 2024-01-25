@@ -90,7 +90,7 @@ namespace RiskOfGambling
             trigger.AddComponent<EntityLocator>().entity = gamblingMachine;
             #endregion
 
-            ShopTerminalBehavior terminalBehavior = gamblingMachine.AddComponent<ShopTerminalBehavior>();
+            //ShopTerminalBehavior terminalBehavior = gamblingMachine.AddComponent<ShopTerminalBehavior>();
 
             #region SpawnCard
             InteractableSpawnCard interactableSpawnCard = ScriptableObject.CreateInstance<InteractableSpawnCard>();
@@ -153,11 +153,17 @@ namespace RiskOfGambling
         private GameObject shrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab").WaitForCompletion();
         private Xoroshiro128Plus rng;
 
-        //private bool hasWhiteItem = false;
-        //private bool hasGreenItem = false;
-        //private bool hasRedItem = false;
+        public PickupIndex dropPickup;
+
+        public Transform dropTransform;
+
+        public float dropUpVelocityStrength = 20f;
+
+        public float dropForwardVelocityStrength = 2f;
 
         private ArrayList rngArray;
+
+        private CostTypeIndex currentCostType;
 
         public void Start()
         {
@@ -177,6 +183,9 @@ namespace RiskOfGambling
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
             rngArray = new ArrayList();
+            dropTransform = base.transform;
+            dropPickup = PickupIndex.none;
+            currentCostType = CostTypeIndex.None;
         }
 
         [Server]
@@ -206,25 +215,98 @@ namespace RiskOfGambling
             CharacterBody character = interactor.GetComponent<CharacterBody>();
             CostTypeDef costTypeDef = RandomizeCostType();
             ItemIndex itemIndex = ItemIndex.None;
-            ShopTerminalBehavior component2 = GetComponent<ShopTerminalBehavior>();
+            //ShopTerminalBehavior component2 = GetComponent<ShopTerminalBehavior>();
 
-            if ((bool)component2)
-            {
-                itemIndex = PickupCatalog.GetPickupDef(component2.CurrentPickupIndex())?.itemIndex ?? ItemIndex.None;
-            }
             CostTypeDef.PayCostResults payCostResults = costTypeDef.PayCost(1, interactor, base.gameObject, rng, itemIndex);
-            foreach (ItemIndex item in payCostResults.itemsTaken)
+            CreateItemTakenOrb(character.corePosition, base.gameObject, payCostResults.itemsTaken[0]);
+            ItemDrop();
+        }
+
+        public PickupIndex RollDrop()
+        {
+            int index = rng.RangeInt(1, 101);
+            PickupIndex item = PickupIndex.none;
+
+            if (currentCostType.Equals(CostTypeIndex.WhiteItem))
             {
-                CreateItemTakenOrb(character.corePosition, base.gameObject, item);
-                if (item != itemIndex)
+                if (index <= 5)
                 {
-                    //PurchaseInteraction.onItemSpentOnPurchase?.Invoke(this, activator);
+                    // Don't drop an item
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Boom. T1</color></style>" });
+                }
+                else if (index >= 86)
+                {
+                    // Upgrade the item to a green item
+                    item = Run.instance.availableTier2DropList[rng.RangeInt(0, Run.instance.availableTier2DropList.Count)];
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Upgrade! T1</color></style>" });
+                }
+                else
+                {
+                    // Reroll the item to another white item
+                    item = Run.instance.availableTier1DropList[rng.RangeInt(0, Run.instance.availableTier1DropList.Count)];
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Reroll! T1</color></style>" });
+                }
+            }
+            else if (currentCostType.Equals(CostTypeIndex.GreenItem))
+            {
+                if (index <= 20)
+                {
+                    // Downgrade to a white item
+                    item = Run.instance.availableTier1DropList[rng.RangeInt(0, Run.instance.availableTier1DropList.Count)];
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Downgrade. T2</color></style>" });
+                }
+                else if (index >= 91)
+                {
+                    // Upgrade the item to a red item
+                    item = Run.instance.availableTier3DropList[rng.RangeInt(0, Run.instance.availableTier3DropList.Count)];
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Upgrade! T2</color></style>" });
+                }
+                else
+                {
+                    // Reroll the item to another green item
+                    item = Run.instance.availableTier2DropList[rng.RangeInt(0, Run.instance.availableTier2DropList.Count)];
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Reroll! T2</color></style>" });
+                }
+            }
+            else if (currentCostType.Equals(CostTypeIndex.RedItem))
+            {
+                if (index <= 30)
+                {
+                    // Downgrade to a green item
+                    item = Run.instance.availableTier2DropList[rng.RangeInt(0, Run.instance.availableTier2DropList.Count)];
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Downgrade. T3</color></style>" });
+                }
+                else
+                {
+                    // Reroll the item to another green item
+                    item = Run.instance.availableTier3DropList[rng.RangeInt(0, Run.instance.availableTier3DropList.Count)];
+                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Reroll! T3</color></style>" });
                 }
             }
 
-            //interactor.GetInstanceID();
+            return item;
+        }
 
+        [Server]
+        public void ItemDrop()
+        {
+            if (!NetworkServer.active)
+            {
+                Debug.LogWarning("[Server] function 'System.Void RoR2.ChestBehavior::ItemDrop()' called on client");
+            }
 
+            dropPickup = RollDrop();
+
+            float angle = 360f;
+            Vector3 vector = Vector3.up * dropUpVelocityStrength + dropTransform.forward * dropForwardVelocityStrength;
+            Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
+
+            PickupDropletController.CreatePickupDroplet(dropPickup, dropTransform.position + Vector3.up * 1.5f, vector);
+
+            vector = quaternion * vector;
+
+            dropPickup = PickupIndex.none;
+            currentCostType = CostTypeIndex.None;
         }
 
         public bool CanBeAffordedByInteractor(Interactor activator)
@@ -260,44 +342,9 @@ namespace RiskOfGambling
             int index = rng.RangeInt(0, rngArray.Count);
             CostTypeIndex costType = (CostTypeIndex)rngArray[index];
             rngArray.Clear();
+            currentCostType = costType;
 
             return CostTypeCatalog.GetCostTypeDef(costType);
-        }
-
-        public void OnInteractionBegin(Interactor activator)
-        {
-            if (!CanBeAffordedByInteractor(activator))
-            {
-                return;
-            }
-
-            CharacterBody character = activator.GetComponent<CharacterBody>();
-            CostTypeDef costTypeDef = RandomizeCostType();
-            ItemIndex itemIndex = ItemIndex.None;
-            ShopTerminalBehavior component2 = GetComponent<ShopTerminalBehavior>();
-            if ((bool)component2)
-            {
-                itemIndex = PickupCatalog.GetPickupDef(component2.CurrentPickupIndex())?.itemIndex ?? ItemIndex.None;
-            }
-            CostTypeDef.PayCostResults payCostResults = costTypeDef.PayCost(1, activator, base.gameObject, rng, itemIndex);
-            foreach (ItemIndex item in payCostResults.itemsTaken)
-            {
-                CreateItemTakenOrb(character.corePosition, base.gameObject, item);
-                if (item != itemIndex)
-                {
-                    //PurchaseInteraction.onItemSpentOnPurchase?.Invoke(this, activator);
-                }
-            }
-            /*
-            foreach (EquipmentIndex item2 in payCostResults.equipmentTaken)
-            {
-                PurchaseInteraction.onEquipmentSpentOnPurchase?.Invoke(this, activator, item2);
-            }
-            */
-            //IEnumerable<StatDef> statDefsToIncrement = purchaseStatNames.Select(StatDef.Find);
-            //StatManager.OnPurchase(component, costType, statDefsToIncrement);
-            //onPurchase.Invoke(activator);
-            //lastActivator = activator;
         }
 
         [Server]
