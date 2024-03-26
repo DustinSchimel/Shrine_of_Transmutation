@@ -7,6 +7,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using UnityEngine.UIElements.UIR;
+using System.IO;
+using System.Reflection;
+using System.Linq;
+
+//using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
+//using R2API;
+using R2API.Utils;
+//using RoR2;
+//using UnityEngine;
+//using RiskOfOptions;
+//using RiskOfOptions.Options;
+//using RiskOfOptions.OptionConfigs;
+using RoR2.CharacterAI;
+using System.Linq;
 
 namespace RiskOfGambling
 {
@@ -36,17 +53,82 @@ namespace RiskOfGambling
         public const string PluginAuthor = "Xerphy";
         public const string PluginName = "RiskOfGambling";
         public const string PluginVersion = "0.3";
+        public AssetBundle mainAssetBundle;
 
-        private GameObject gamblingMachine = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/mdlBeetle.fbx").WaitForCompletion(), "BeebleMemorialStatue");
-        private Material gamblingMachineMat = Addressables.LoadAssetAsync<Material>("RoR2/Base/MonstersOnShrineUse/matMonstersOnShrineUse.mat").WaitForCompletion();
+        //private GameObject gamblingMachine = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/mdlBeetle.fbx").WaitForCompletion(), "BeebleMemorialStatue");
+        //private Material gamblingMachineMat = Addressables.LoadAssetAsync<Material>("RoR2/Base/MonstersOnShrineUse/matMonstersOnShrineUse.mat").WaitForCompletion();
+        private GameObject gamblingMachine;
+        private Material gamblingMachineMat;
+
+
+        public class Assets
+        {
+            //exampleDifficultyModBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("myModName.dll", "myBundleFileName"));
+            //public AssetBundle MainAssetBundle;
+            //MainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("myModName.dll", "myBundleFileName"));
+
+            //public AssetBundle exampleDifficultyModBundle;
+            //RiskOfGambling.exampleDifficultyModBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("RiskOfGambling.dll", "examplesurvivorbundle"));
+
+            //public static AssetBundleResourcesProvider Provider;
+
+            public static GameObject gamblingMachineModel;
+            /*
+            public static void PopulateAssets()
+            {
+                if(MainAssetBundle == null)
+                {
+                    using (Stream assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("RiskOfGambling.examplesurvivorbundle"))
+                    {
+                        MainAssetBundle = AssetBundle.LoadFromStream(assetStream);
+                        //Provider = new AssetBundleResourcesProvider("@RiskOfGambling", MainAssetBundle);
+                        //R2API.ResourcesAPI.AddProvider(Provider);
+                    }
+                }
+            }
+            */
+        }
 
         // The Awake() method is run at the very start when the game is initialized.
         public void Awake()
         {
+            mainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("RiskOfGambling.dll", "gamblingmachinebundle"));
+
+            if (mainAssetBundle == null)
+            {
+                Debug.Log("NULL asset bundle");
+            }
+            else
+            {
+                Debug.Log("Asset bundle found");
+            }
+
+            //mainAssetBundle.LoadAsset<GameObject>("TestModelPrefab.prefab");
+
+            //gamblingMachine = examplesurvivorbundle.LoadAsset<GameObject>("TestModelPrefab.prefab");
+            //AssetBundleRequest assetBundleRequest = mainAssetBundle.LoadAssetAsync<GameObject>("TestModelPrefab.prefab");
+            //gamblingMachine = mainAssetBundle.LoadAsset<GameObject>("Assets/ExampleSurvivor/ExampleSurvivorAssets/testmodelprefab.prefab");
+            //gamblingMachine = mainAssetBundle.LoadAsset<GameObject>("Assets/ExampleSurvivor/ExampleSurvivorAssets/testmodelprefab.prefab");
+
+            //private GameObject gamblingMachine = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/mdlBeetle.fbx").WaitForCompletion(), "BeebleMemorialStatue");
+            //gamblingMachine = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ExampleSurvivor/ExampleSurvivorAssets/GamblingMachineModel.prefab"), "GamblingMachineModel");
+            gamblingMachine = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/GamblingMachine/GamblingMachineAssets/GamblingMachineTest.prefab"), "GamblingMachineModel");
+
+            if (gamblingMachine == null)
+            {
+                Debug.Log("Gambling Machine instantiated");
+            }
+            else
+            {
+                Debug.Log("Gambling Machine NULL");
+            }
+
             // Init our logging class so that we can properly log for debugging
             Log.Init(Logger);
 
             #region Prepping the Asset
+            //Assets.PopulateAssets();
+
             // In-game name
             gamblingMachine.name = "GamblingMachine";
 
@@ -54,13 +136,13 @@ namespace RiskOfGambling
             gamblingMachine.AddComponent<NetworkIdentity>();
 
             // Scaling the model up
-            gamblingMachine.transform.localScale = new Vector3(3f, 3f, 3f);
+            //gamblingMachine.transform.localScale = new Vector3(3f, 3f, 3f);
 
             // This applies the material to the mesh
-            gamblingMachine.transform.GetChild(1).GetComponent<SkinnedMeshRenderer>().sharedMaterial = gamblingMachineMat;
+            //gamblingMachine.transform.GetChild(1).GetComponent<SkinnedMeshRenderer>().sharedMaterial = gamblingMachineMat;
 
             // Adding a collider so the machine is solid, though it uses a SkinnedMeshRenderer so it doesn't easily work with a MeshCollider, for simplicity sake we're using a simple BoxCollider
-            gamblingMachine.transform.GetChild(1).gameObject.AddComponent<BoxCollider>();
+            //gamblingMachine.transform.GetChild(1).gameObject.AddComponent<BoxCollider>();
             #endregion
 
             #region Adding interaction
@@ -244,6 +326,34 @@ namespace RiskOfGambling
             ColorCatalog.ColorIndex upgradeColorIndex;
             ColorCatalog.ColorIndex previousColorIndex;
 
+            List<PickupIndex> tier1DropList = Run.instance.availableTier1DropList;
+            List<PickupIndex> tier2DropList = Run.instance.availableTier2DropList;
+            List<PickupIndex> tier3DropList = Run.instance.availableTier3DropList;
+
+            //Run.instance.availableTier2DropList.Remove(Run.instance.availableTier2DropList.)
+
+            /*
+            // Removes regenerating scrap from the drop pool since it would be OP
+            PickupIndex regenScrap = PickupCatalog.FindPickupIndex("RegeneratingScrap");
+            ItemCatalog.FindItemIndex("RegeneratingScrap");
+            //PickupCatalog.
+            ItemCatalog.
+            if (tier2DropList.Remove(regenScrap))
+            {
+                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                {
+                    baseToken = "TRUE!! " + regenScrap
+                });
+            }
+            else
+            {
+                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                {
+                    baseToken = "FALSE!! " + regenScrap
+                });
+            }
+            */
+
             if (currentCostType.Equals(CostTypeIndex.WhiteItem))
             {
                 currentColorIndex = ColorCatalog.ColorIndex.Tier1Item;
@@ -252,7 +362,6 @@ namespace RiskOfGambling
                 if (index <= 5)
                 {
                     // Don't drop an item
-                    //Chat.SendBroadcastChat(new Chat.SimpleChatMessage() { baseToken = "<style=cEvent><color=#307FFF>Boom. T1</color></style>" });
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Destroyed </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)+ "</color></style>"
@@ -261,7 +370,9 @@ namespace RiskOfGambling
                 else if (index >= 86)
                 {
                     // Upgrade the item to a green item
-                    item = Run.instance.availableTier2DropList[rng.RangeInt(0, Run.instance.availableTier2DropList.Count)];
+                    item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
+
+                    //if (item.GetPickupNameToken)
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
@@ -271,7 +382,7 @@ namespace RiskOfGambling
                 else
                 {
                     // Reroll the item to another white item
-                    item = Run.instance.availableTier1DropList[rng.RangeInt(0, Run.instance.availableTier1DropList.Count)];
+                    item = tier1DropList[rng.RangeInt(0, tier1DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
@@ -288,7 +399,7 @@ namespace RiskOfGambling
                 if (index <= 20)
                 {
                     // Downgrade to a white item
-                    item = Run.instance.availableTier1DropList[rng.RangeInt(0, Run.instance.availableTier1DropList.Count)];
+                    item = tier1DropList[rng.RangeInt(0, tier1DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
@@ -298,7 +409,7 @@ namespace RiskOfGambling
                 else if (index >= 91)
                 {
                     // Upgrade the item to a red item
-                    item = Run.instance.availableTier3DropList[rng.RangeInt(0, Run.instance.availableTier3DropList.Count)];
+                    item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
@@ -308,7 +419,7 @@ namespace RiskOfGambling
                 else
                 {
                     // Reroll the item to another green item
-                    item = Run.instance.availableTier2DropList[rng.RangeInt(0, Run.instance.availableTier2DropList.Count)];
+                    item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
@@ -324,7 +435,7 @@ namespace RiskOfGambling
                 if (index <= 30)
                 {
                     // Downgrade to a green item
-                    item = Run.instance.availableTier2DropList[rng.RangeInt(0, Run.instance.availableTier2DropList.Count)];
+                    item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
@@ -334,7 +445,7 @@ namespace RiskOfGambling
                 else
                 {
                     // Reroll the item to another red item
-                    item = Run.instance.availableTier3DropList[rng.RangeInt(0, Run.instance.availableTier3DropList.Count)];
+                    item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
                         baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
