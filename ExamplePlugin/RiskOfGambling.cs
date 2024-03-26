@@ -60,35 +60,6 @@ namespace RiskOfGambling
         private GameObject gamblingMachine;
         private Material gamblingMachineMat;
 
-
-        public class Assets
-        {
-            //exampleDifficultyModBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("myModName.dll", "myBundleFileName"));
-            //public AssetBundle MainAssetBundle;
-            //MainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("myModName.dll", "myBundleFileName"));
-
-            //public AssetBundle exampleDifficultyModBundle;
-            //RiskOfGambling.exampleDifficultyModBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("RiskOfGambling.dll", "examplesurvivorbundle"));
-
-            //public static AssetBundleResourcesProvider Provider;
-
-            public static GameObject gamblingMachineModel;
-            /*
-            public static void PopulateAssets()
-            {
-                if(MainAssetBundle == null)
-                {
-                    using (Stream assetStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("RiskOfGambling.examplesurvivorbundle"))
-                    {
-                        MainAssetBundle = AssetBundle.LoadFromStream(assetStream);
-                        //Provider = new AssetBundleResourcesProvider("@RiskOfGambling", MainAssetBundle);
-                        //R2API.ResourcesAPI.AddProvider(Provider);
-                    }
-                }
-            }
-            */
-        }
-
         // The Awake() method is run at the very start when the game is initialized.
         public void Awake()
         {
@@ -96,38 +67,28 @@ namespace RiskOfGambling
 
             if (mainAssetBundle == null)
             {
-                Debug.Log("NULL asset bundle");
+                Debug.Log("Asset bundle not found");
             }
             else
             {
                 Debug.Log("Asset bundle found");
             }
 
-            //mainAssetBundle.LoadAsset<GameObject>("TestModelPrefab.prefab");
-
-            //gamblingMachine = examplesurvivorbundle.LoadAsset<GameObject>("TestModelPrefab.prefab");
-            //AssetBundleRequest assetBundleRequest = mainAssetBundle.LoadAssetAsync<GameObject>("TestModelPrefab.prefab");
-            //gamblingMachine = mainAssetBundle.LoadAsset<GameObject>("Assets/ExampleSurvivor/ExampleSurvivorAssets/testmodelprefab.prefab");
-            //gamblingMachine = mainAssetBundle.LoadAsset<GameObject>("Assets/ExampleSurvivor/ExampleSurvivorAssets/testmodelprefab.prefab");
-
-            //private GameObject gamblingMachine = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/mdlBeetle.fbx").WaitForCompletion(), "BeebleMemorialStatue");
-            //gamblingMachine = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ExampleSurvivor/ExampleSurvivorAssets/GamblingMachineModel.prefab"), "GamblingMachineModel");
             gamblingMachine = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/GamblingMachine/GamblingMachineAssets/GamblingMachineTest.prefab"), "GamblingMachineModel");
 
             if (gamblingMachine == null)
             {
-                Debug.Log("Gambling Machine instantiated");
+                Debug.Log("Gambling Machine not instantiated");
             }
             else
             {
-                Debug.Log("Gambling Machine NULL");
+                Debug.Log("Gambling Machine instantiated");
             }
 
             // Init our logging class so that we can properly log for debugging
             Log.Init(Logger);
 
             #region Prepping the Asset
-            //Assets.PopulateAssets();
 
             // In-game name
             gamblingMachine.name = "GamblingMachine";
