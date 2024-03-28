@@ -74,7 +74,7 @@ namespace RiskOfGambling
                 Debug.Log("Asset bundle found");
             }
 
-            gamblingMachine = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/GamblingMachine/GamblingMachineAssets/GamblingMachineTest.prefab"), "GamblingMachineModel");
+            gamblingMachine = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/GamblingMachine/GamblingMachineAssets/TempGamblingMachine.prefab"), "GamblingMachineModel");
 
             if (gamblingMachine == null)
             {
@@ -104,6 +104,7 @@ namespace RiskOfGambling
 
             // Adding a collider so the machine is solid, though it uses a SkinnedMeshRenderer so it doesn't easily work with a MeshCollider, for simplicity sake we're using a simple BoxCollider
             //gamblingMachine.transform.GetChild(1).gameObject.AddComponent<BoxCollider>();
+            //gamblingMachine.transform.GetChild(2).gameObject.AddComponent<BoxCollider>();
             #endregion
 
             #region Adding interaction
@@ -121,16 +122,36 @@ namespace RiskOfGambling
             mgr.purchaseInteraction = interaction;
 
             // The renderer that will be highlighted by our Highlight component
+            //gamblingMachine.AddComponent<Highlight>().targetRenderer;
             gamblingMachine.GetComponent<Highlight>().targetRenderer = gamblingMachine.GetComponentInChildren<SkinnedMeshRenderer>();
 
             // Create a new GameObject that'll act as the trigger
-            GameObject trigger = Instantiate(new GameObject("Trigger"), gamblingMachine.transform);
+            //GameObject trigger = Instantiate(new GameObject("Trigger"), gamblingMachine.transform);
 
             // Adding a BoxCollider and setting it to be a trigger so it's not solid 
-            trigger.AddComponent<BoxCollider>().isTrigger = true;
+            //trigger.AddComponent<BoxCollider>().isTrigger = true;
 
             // EntityLocator is necessary for the interactable highlight
-            trigger.AddComponent<EntityLocator>().entity = gamblingMachine;
+            //trigger.AddComponent<EntityLocator>().entity = gamblingMachine;
+
+            gamblingMachine.transform.GetChild(0).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(0).gameObject.GetComponentInChildren<MeshRenderer>();
+            gamblingMachine.transform.GetChild(1).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(1).gameObject.GetComponentInChildren<MeshRenderer>();
+            gamblingMachine.transform.GetChild(2).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(2).gameObject.GetComponentInChildren<MeshRenderer>();
+            gamblingMachine.transform.GetChild(3).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(3).gameObject.GetComponentInChildren<MeshRenderer>();
+            gamblingMachine.transform.GetChild(4).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+            gamblingMachine.transform.GetChild(5).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+            gamblingMachine.transform.GetChild(6).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+            gamblingMachine.transform.GetChild(7).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+
+            //Debug.Log(gamblingMachine.transform.GetChild(0));
+            //Debug.Log(gamblingMachine.transform.GetChild(1));
+            //Debug.Log(gamblingMachine.transform.GetChild(2));
+            //Debug.Log(gamblingMachine.transform.GetChild(3));
+            //Debug.Log(gamblingMachine.transform.GetChild(4));
+            //Debug.Log(gamblingMachine.transform.GetChild(5));
+            //Debug.Log(gamblingMachine.transform.GetChild(6));
+            //Debug.Log(gamblingMachine.transform.GetChild(7));
+            //Debug.Log(gamblingMachine.transform.GetChild(8));
             #endregion
 
             //ShopTerminalBehavior terminalBehavior = gamblingMachine.AddComponent<ShopTerminalBehavior>();
