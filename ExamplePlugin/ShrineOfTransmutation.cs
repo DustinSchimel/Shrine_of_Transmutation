@@ -23,9 +23,9 @@ using R2API.Utils;
 //using RiskOfOptions.Options;
 //using RiskOfOptions.OptionConfigs;
 using RoR2.CharacterAI;
-using System.Linq;
+//using System.Linq;
 
-namespace RiskOfGambling
+namespace ShrineOfTransmutation
 {
     // This attribute specifies that we have a dependency on a given BepInEx Plugin,
     // We need the R2API ItemAPI dependency because we are using for adding our item to the game.
@@ -45,25 +45,25 @@ namespace RiskOfGambling
     // BaseUnityPlugin itself inherits from MonoBehaviour,
     // so you can use this as a reference for what you can declare and use in your plugin class
     // More information in the Unity Docs: https://docs.unity3d.com/ScriptReference/MonoBehaviour.html
-    public class RiskOfGambling : BaseUnityPlugin
+    public class ShrineOfTransmutation : BaseUnityPlugin
     {
         // The Plugin GUID should be a unique ID for this plugin,
         // which is human readable (as it is used in places like the config).
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Xerphy";
-        public const string PluginName = "RiskOfGambling";
-        public const string PluginVersion = "0.3";
+        public const string PluginName = "ShrineOfTransmutation";
+        public const string PluginVersion = "0.5";
         public AssetBundle mainAssetBundle;
 
         //private GameObject gamblingMachine = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/mdlBeetle.fbx").WaitForCompletion(), "BeebleMemorialStatue");
         //private Material gamblingMachineMat = Addressables.LoadAssetAsync<Material>("RoR2/Base/MonstersOnShrineUse/matMonstersOnShrineUse.mat").WaitForCompletion();
-        private GameObject gamblingMachine;
-        private Material gamblingMachineMat;
+        private GameObject shrineOfTransmutation;
+        private Material shrineOfTransmutationMat;
 
         // The Awake() method is run at the very start when the game is initialized.
         public void Awake()
         {
-            mainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("RiskOfGambling.dll", "gamblingmachinebundle"));
+            mainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("ShrineOfTransmutation.dll", "shrineoftransmutationbundle"));
 
             if (mainAssetBundle == null)
             {
@@ -74,15 +74,15 @@ namespace RiskOfGambling
                 Debug.Log("Asset bundle found");
             }
 
-            gamblingMachine = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/GamblingMachine/GamblingMachineAssets/TempGamblingMachine.prefab"), "GamblingMachineModel");
+            shrineOfTransmutation = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ShrineOfTransmutation/ShrineOfTransmutationAssets/ShrineOfTransmutation.prefab"), "ShrineOfTransmutationModel");
 
-            if (gamblingMachine == null)
+            if (shrineOfTransmutation == null)
             {
-                Debug.Log("Gambling Machine not instantiated");
+                Debug.Log("Shrine of Transmutation not instantiated");
             }
             else
             {
-                Debug.Log("Gambling Machine instantiated");
+                Debug.Log("Shrine of Transmutation instantiated");
             }
 
             // Init our logging class so that we can properly log for debugging
@@ -91,10 +91,10 @@ namespace RiskOfGambling
             #region Prepping the Asset
 
             // In-game name
-            gamblingMachine.name = "GamblingMachine";
+            shrineOfTransmutation.name = "Shrine of Transmutation";
 
             // Added for for multiplayer compatability
-            gamblingMachine.AddComponent<NetworkIdentity>();
+            shrineOfTransmutation.AddComponent<NetworkIdentity>();
 
             // Scaling the model up
             //gamblingMachine.transform.localScale = new Vector3(3f, 3f, 3f);
@@ -109,21 +109,21 @@ namespace RiskOfGambling
 
             #region Adding interaction
             // Add main necessary component PurchaseInteraction, this will add a Highlight component as well
-            PurchaseInteraction interaction = gamblingMachine.AddComponent<PurchaseInteraction>();
+            PurchaseInteraction interaction = shrineOfTransmutation.AddComponent<PurchaseInteraction>();
 
-            GamblingMachineManager mgr = gamblingMachine.AddComponent<GamblingMachineManager>();
+            ShrineOfTransmutationManager mgr = shrineOfTransmutation.AddComponent<ShrineOfTransmutationManager>();
 
             // What the shrine displays when near
-            interaction.contextToken = "Anita Max Wynn";
+            interaction.contextToken = "Shrine of Transmutation";
 
             // What the shrine displays on ping
-            interaction.NetworkdisplayNameToken = "Anita Max Wynn";
+            interaction.NetworkdisplayNameToken = "Shrine of Transmutation";
 
             mgr.purchaseInteraction = interaction;
 
             // The renderer that will be highlighted by our Highlight component
             //gamblingMachine.AddComponent<Highlight>().targetRenderer;
-            gamblingMachine.GetComponent<Highlight>().targetRenderer = gamblingMachine.GetComponentInChildren<SkinnedMeshRenderer>();
+            shrineOfTransmutation.GetComponent<Highlight>().targetRenderer = shrineOfTransmutation.GetComponentInChildren<SkinnedMeshRenderer>();
 
             // Create a new GameObject that'll act as the trigger
             //GameObject trigger = Instantiate(new GameObject("Trigger"), gamblingMachine.transform);
@@ -134,14 +134,14 @@ namespace RiskOfGambling
             // EntityLocator is necessary for the interactable highlight
             //trigger.AddComponent<EntityLocator>().entity = gamblingMachine;
 
-            gamblingMachine.transform.GetChild(0).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(0).gameObject.GetComponentInChildren<MeshRenderer>();
-            gamblingMachine.transform.GetChild(1).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(1).gameObject.GetComponentInChildren<MeshRenderer>();
-            gamblingMachine.transform.GetChild(2).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(2).gameObject.GetComponentInChildren<MeshRenderer>();
-            gamblingMachine.transform.GetChild(3).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(3).gameObject.GetComponentInChildren<MeshRenderer>();
-            gamblingMachine.transform.GetChild(4).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
-            gamblingMachine.transform.GetChild(5).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
-            gamblingMachine.transform.GetChild(6).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
-            gamblingMachine.transform.GetChild(7).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+            //.......,,shrineOfTransmutation.transform.GetChild(0).gameObject.AddComponent<Highlight>().targetRenderer = shrineOfTransmutation.transform.GetChild(0).gameObject.GetComponentInChildren<MeshRenderer>();
+            //shrineOfTransmutation.transform.GetChild(1).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(1).gameObject.GetComponentInChildren<MeshRenderer>();
+            //shrineOfTransmutation.transform.GetChild(2).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(2).gameObject.GetComponentInChildren<MeshRenderer>();
+            //shrineOfTransmutation.transform.GetChild(3).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(3).gameObject.GetComponentInChildren<MeshRenderer>();
+            //shrineOfTransmutation.transform.GetChild(4).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+            //shrineOfTransmutation.transform.GetChild(5).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+            //shrineOfTransmutation.transform.GetChild(6).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
+            //shrineOfTransmutation.transform.GetChild(7).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
 
             //Debug.Log(gamblingMachine.transform.GetChild(0));
             //Debug.Log(gamblingMachine.transform.GetChild(1));
@@ -158,8 +158,8 @@ namespace RiskOfGambling
 
             #region SpawnCard
             InteractableSpawnCard interactableSpawnCard = ScriptableObject.CreateInstance<InteractableSpawnCard>();
-            interactableSpawnCard.name = "iscGamblingMachine";
-            interactableSpawnCard.prefab = gamblingMachine;
+            interactableSpawnCard.name = "iscShrineOfTransmutation";
+            interactableSpawnCard.prefab = shrineOfTransmutation;
             interactableSpawnCard.sendOverNetwork = true;
             // The size of the interactable, there's Human, Golem, and BeetleQueen
             interactableSpawnCard.hullSize = HullClassification.Golem;
@@ -211,7 +211,7 @@ namespace RiskOfGambling
         }
     }
 
-    public class GamblingMachineManager : NetworkBehaviour
+    public class ShrineOfTransmutationManager : NetworkBehaviour
     {
         public PurchaseInteraction purchaseInteraction;
         private GameObject shrineUseEffect = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/ShrineUseEffect.prefab").WaitForCompletion();
@@ -262,7 +262,7 @@ namespace RiskOfGambling
         {
             if (!NetworkServer.active)
             {
-                Debug.LogWarning("[Server] function 'GamblingMachineManager::OnPurchase(RoR2.Interactor)' called on client");
+                Debug.LogWarning("[Server] function 'ShrineOfTransmutationManager::OnPurchase(RoR2.Interactor)' called on client");
                 return;
             }
 

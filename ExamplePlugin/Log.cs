@@ -1,6 +1,6 @@
 ﻿using BepInEx.Logging;
 
-namespace RiskOfGambling
+namespace ShrineOfTransmutation
 {
     internal static class Log
     {

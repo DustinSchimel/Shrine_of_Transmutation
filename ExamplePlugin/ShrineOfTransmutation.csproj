@@ -13,11 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="gamblingmachinebundle" />
+    <None Remove="shrineoftransmutationbundle" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="gamblingmachinebundle" />
+    <EmbeddedResource Include="shrineoftransmutationbundle" />
   </ItemGroup>
 
   <ItemGroup>

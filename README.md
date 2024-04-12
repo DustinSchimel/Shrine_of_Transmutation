@@ -1,3 +1,3 @@
-# RiskOfGambling
+# Shrine of Transmutation
 
 WIP mod
