@@ -23,6 +23,7 @@ using R2API.Utils;
 //using RiskOfOptions.Options;
 //using RiskOfOptions.OptionConfigs;
 using RoR2.CharacterAI;
+using static RoR2.ColorCatalog;
 //using System.Linq;
 
 namespace ShrineOfTransmutation
@@ -55,10 +56,7 @@ namespace ShrineOfTransmutation
         public const string PluginVersion = "0.5";
         public AssetBundle mainAssetBundle;
 
-        //private GameObject gamblingMachine = PrefabAPI.InstantiateClone(Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Beetle/mdlBeetle.fbx").WaitForCompletion(), "BeebleMemorialStatue");
-        //private Material gamblingMachineMat = Addressables.LoadAssetAsync<Material>("RoR2/Base/MonstersOnShrineUse/matMonstersOnShrineUse.mat").WaitForCompletion();
         private GameObject shrineOfTransmutation;
-        private Material shrineOfTransmutationMat;
 
         // The Awake() method is run at the very start when the game is initialized.
         public void Awake()
@@ -74,7 +72,7 @@ namespace ShrineOfTransmutation
                 Debug.Log("Asset bundle found");
             }
 
-            shrineOfTransmutation = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ShrineOfTransmutation/ShrineOfTransmutationAssets/ShrineOfTransmutation.prefab"), "ShrineOfTransmutationModel");
+            shrineOfTransmutation = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ShrineOfTransmutation/ShrineOfTransmutationAssets/TempCube.prefab"), "ShrineOfTransmutationModel");
 
             if (shrineOfTransmutation == null)
             {
@@ -97,14 +95,7 @@ namespace ShrineOfTransmutation
             shrineOfTransmutation.AddComponent<NetworkIdentity>();
 
             // Scaling the model up
-            //gamblingMachine.transform.localScale = new Vector3(3f, 3f, 3f);
-
-            // This applies the material to the mesh
-            //gamblingMachine.transform.GetChild(1).GetComponent<SkinnedMeshRenderer>().sharedMaterial = gamblingMachineMat;
-
-            // Adding a collider so the machine is solid, though it uses a SkinnedMeshRenderer so it doesn't easily work with a MeshCollider, for simplicity sake we're using a simple BoxCollider
-            //gamblingMachine.transform.GetChild(1).gameObject.AddComponent<BoxCollider>();
-            //gamblingMachine.transform.GetChild(2).gameObject.AddComponent<BoxCollider>();
+            //shrineOfTransmutation.transform.localScale = new Vector3(1f, 1f, 1f);
             #endregion
 
             #region Adding interaction
@@ -113,45 +104,24 @@ namespace ShrineOfTransmutation
 
             ShrineOfTransmutationManager mgr = shrineOfTransmutation.AddComponent<ShrineOfTransmutationManager>();
 
+            String t1ColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier1Item);
+            String t2ColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
+            String t3ColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
+
             // What the shrine displays when near
-            interaction.contextToken = "Shrine of Transmutation";
+            interaction.contextToken = "Use Shrine of Transmutation (<color=#" + t1ColorHex + ">1 It</color><color=#" + t2ColorHex + ">em</color><color=#" + t3ColorHex + ">(s)</color><style=cIsDamage>)";
 
             // What the shrine displays on ping
-            interaction.NetworkdisplayNameToken = "Shrine of Transmutation";
+            interaction.NetworkdisplayNameToken = "Shrine of Transmutation (<color=#" + t1ColorHex + ">1 It</color><color=#" + t2ColorHex + ">em</color><color=#" + t3ColorHex + ">(s)</color><style=cIsDamage>)";
 
             mgr.purchaseInteraction = interaction;
 
             // The renderer that will be highlighted by our Highlight component
-            //gamblingMachine.AddComponent<Highlight>().targetRenderer;
+            // idk if this is working
             shrineOfTransmutation.GetComponent<Highlight>().targetRenderer = shrineOfTransmutation.GetComponentInChildren<SkinnedMeshRenderer>();
 
-            // Create a new GameObject that'll act as the trigger
-            //GameObject trigger = Instantiate(new GameObject("Trigger"), gamblingMachine.transform);
-
-            // Adding a BoxCollider and setting it to be a trigger so it's not solid 
-            //trigger.AddComponent<BoxCollider>().isTrigger = true;
-
             // EntityLocator is necessary for the interactable highlight
-            //trigger.AddComponent<EntityLocator>().entity = gamblingMachine;
-
-            //.......,,shrineOfTransmutation.transform.GetChild(0).gameObject.AddComponent<Highlight>().targetRenderer = shrineOfTransmutation.transform.GetChild(0).gameObject.GetComponentInChildren<MeshRenderer>();
-            //shrineOfTransmutation.transform.GetChild(1).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(1).gameObject.GetComponentInChildren<MeshRenderer>();
-            //shrineOfTransmutation.transform.GetChild(2).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(2).gameObject.GetComponentInChildren<MeshRenderer>();
-            //shrineOfTransmutation.transform.GetChild(3).gameObject.AddComponent<Highlight>().targetRenderer = gamblingMachine.transform.GetChild(3).gameObject.GetComponentInChildren<MeshRenderer>();
-            //shrineOfTransmutation.transform.GetChild(4).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
-            //shrineOfTransmutation.transform.GetChild(5).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
-            //shrineOfTransmutation.transform.GetChild(6).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
-            //shrineOfTransmutation.transform.GetChild(7).gameObject.AddComponent<EntityLocator>().entity = gamblingMachine;
-
-            //Debug.Log(gamblingMachine.transform.GetChild(0));
-            //Debug.Log(gamblingMachine.transform.GetChild(1));
-            //Debug.Log(gamblingMachine.transform.GetChild(2));
-            //Debug.Log(gamblingMachine.transform.GetChild(3));
-            //Debug.Log(gamblingMachine.transform.GetChild(4));
-            //Debug.Log(gamblingMachine.transform.GetChild(5));
-            //Debug.Log(gamblingMachine.transform.GetChild(6));
-            //Debug.Log(gamblingMachine.transform.GetChild(7));
-            //Debug.Log(gamblingMachine.transform.GetChild(8));
+            shrineOfTransmutation.transform.GetChild(0).gameObject.AddComponent<EntityLocator>().entity = shrineOfTransmutation;
             #endregion
 
             //ShopTerminalBehavior terminalBehavior = gamblingMachine.AddComponent<ShopTerminalBehavior>();
@@ -162,7 +132,7 @@ namespace ShrineOfTransmutation
             interactableSpawnCard.prefab = shrineOfTransmutation;
             interactableSpawnCard.sendOverNetwork = true;
             // The size of the interactable, there's Human, Golem, and BeetleQueen
-            interactableSpawnCard.hullSize = HullClassification.Golem;
+            interactableSpawnCard.hullSize = HullClassification.Human;
             // Which nodegraph should it spawn on, air or ground
             interactableSpawnCard.nodeGraphType = RoR2.Navigation.MapNodeGroup.GraphType.Ground;
             interactableSpawnCard.requiredFlags = RoR2.Navigation.NodeFlags.None;
@@ -189,19 +159,6 @@ namespace ShrineOfTransmutation
 
             // Registers the interactable on every stage
             DirectorAPI.Helpers.AddNewInteractable(directorCardHolder);
-
-            /*
-            // Or create your stage list and register it on each of those stages
-            List<DirectorAPI.Stage> stageList = new List<DirectorAPI.Stage>();
-
-            stageList.Add(DirectorAPI.Stage.DistantRoost);
-            stageList.Add(DirectorAPI.Stage.AbyssalDepthsSimulacrum);
-
-            foreach (DirectorAPI.Stage stage in stageList)
-            {
-                DirectorAPI.Helpers.AddNewInteractableToStage(directorCardHolder, stage);
-            }
-            */
         }
 
         // The Update() method is run on every frame of the game.
@@ -245,6 +202,7 @@ namespace ShrineOfTransmutation
             //purchaseInteraction.ShouldShowOnScanner(true);
             //purchaseInteraction.cost = 50;
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
+            //purchaseInteraction.
         }
 
         public void Awake()
@@ -338,15 +296,15 @@ namespace ShrineOfTransmutation
 
             if (currentCostType.Equals(CostTypeIndex.WhiteItem))
             {
-                currentColorIndex = ColorCatalog.ColorIndex.Tier1Item;
-                upgradeColorIndex = ColorCatalog.ColorIndex.Tier2Item;
+                String currentColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier1Item);
+                String upgradeColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
 
                 if (index <= 5)
                 {
                     // Don't drop an item
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Destroyed </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)+ "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Destroyed </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)+ "</color></style>"
                     });
                 }
                 else if (index >= 86)
@@ -357,8 +315,8 @@ namespace ShrineOfTransmutation
                     //if (item.GetPickupNameToken)
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + ColorCatalog.GetColorHexString(upgradeColorIndex) + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + upgradeColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
                 else
@@ -367,16 +325,16 @@ namespace ShrineOfTransmutation
                     item = tier1DropList[rng.RangeInt(0, tier1DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + currentColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
             }
             else if (currentCostType.Equals(CostTypeIndex.GreenItem))
             {
-                previousColorIndex = ColorCatalog.ColorIndex.Tier1Item;
-                currentColorIndex = ColorCatalog.ColorIndex.Tier2Item;
-                upgradeColorIndex = ColorCatalog.ColorIndex.Tier3Item;
+                String previousColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier1Item);
+                String currentColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
+                String upgradeColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
 
                 if (index <= 20)
                 {
@@ -384,8 +342,8 @@ namespace ShrineOfTransmutation
                     item = tier1DropList[rng.RangeInt(0, tier1DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + ColorCatalog.GetColorHexString(previousColorIndex) + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + previousColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
                 else if (index >= 91)
@@ -394,8 +352,8 @@ namespace ShrineOfTransmutation
                     item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + ColorCatalog.GetColorHexString(upgradeColorIndex) + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + upgradeColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
                 else
@@ -404,15 +362,15 @@ namespace ShrineOfTransmutation
                     item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + currentColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
             }
             else if (currentCostType.Equals(CostTypeIndex.RedItem))
             {
-                previousColorIndex = ColorCatalog.ColorIndex.Tier2Item;
-                currentColorIndex = ColorCatalog.ColorIndex.Tier3Item;
+                String previousColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
+                String currentColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
 
                 if (index <= 30)
                 {
@@ -420,8 +378,8 @@ namespace ShrineOfTransmutation
                     item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + ColorCatalog.GetColorHexString(previousColorIndex) + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + previousColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
                 else
@@ -430,8 +388,8 @@ namespace ShrineOfTransmutation
                     item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + ColorCatalog.GetColorHexString(currentColorIndex) + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + currentColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
             }
