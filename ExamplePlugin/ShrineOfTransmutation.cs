@@ -117,14 +117,13 @@ namespace ShrineOfTransmutation
             mgr.purchaseInteraction = interaction;
 
             // The renderer that will be highlighted by our Highlight component
-            // idk if this is working
             shrineOfTransmutation.GetComponent<Highlight>().targetRenderer = shrineOfTransmutation.GetComponentInChildren<MeshRenderer>();
 
             // EntityLocator is necessary for the interactable highlight
             shrineOfTransmutation.transform.GetChild(0).gameObject.AddComponent<EntityLocator>().entity = shrineOfTransmutation;
             #endregion
 
-            //ShopTerminalBehavior terminalBehavior = gamblingMachine.AddComponent<ShopTerminalBehavior>();
+            //ShopTerminalBehavior terminalBehavior = shrineOfTransmutation.AddComponent<ShopTerminalBehavior>();
 
             #region SpawnCard
             InteractableSpawnCard interactableSpawnCard = ScriptableObject.CreateInstance<InteractableSpawnCard>();
@@ -202,7 +201,6 @@ namespace ShrineOfTransmutation
             //purchaseInteraction.ShouldShowOnScanner(true);
             //purchaseInteraction.cost = 50;
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
-            //purchaseInteraction.
         }
 
         public void Awake()
@@ -260,136 +258,120 @@ namespace ShrineOfTransmutation
 
         public PickupIndex RollDrop()
         {
-            int index = rng.RangeInt(1, 101);
+            int index = rng.RangeInt(1, 1001);
             PickupIndex item = PickupIndex.none;
-            ColorCatalog.ColorIndex currentColorIndex;
-            ColorCatalog.ColorIndex upgradeColorIndex;
-            ColorCatalog.ColorIndex previousColorIndex;
+
+            // All probabilities. int/10%
+            int chanceToBoom = 50;          //5%
+            int chanceWhiteToGreen = 150;   //15%
+            //int chanceWhiteToWhite = 800;   //80%
+
+            int chanceGreenToWhite = 200;   //20%
+            int chanceGreenToRed = 100;     //10%
+            //int chanceGreenToGreen = 700;   //70%
+
+            int chanceRedToGreen = 300;     //30%
+            //int chanceRedToRed = 700;       //70%
 
             List<PickupIndex> tier1DropList = Run.instance.availableTier1DropList;
             List<PickupIndex> tier2DropList = Run.instance.availableTier2DropList;
             List<PickupIndex> tier3DropList = Run.instance.availableTier3DropList;
 
-            //Run.instance.availableTier2DropList.Remove(Run.instance.availableTier2DropList.)
-
-            /*
-            // Removes regenerating scrap from the drop pool since it would be OP
-            PickupIndex regenScrap = PickupCatalog.FindPickupIndex("RegeneratingScrap");
-            ItemCatalog.FindItemIndex("RegeneratingScrap");
-            //PickupCatalog.
-            ItemCatalog.
-            if (tier2DropList.Remove(regenScrap))
-            {
-                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
-                {
-                    baseToken = "TRUE!! " + regenScrap
-                });
-            }
-            else
-            {
-                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
-                {
-                    baseToken = "FALSE!! " + regenScrap
-                });
-            }
-            */
+            String whiteColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier1Item);
+            String greenColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
+            String redColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
 
             if (currentCostType.Equals(CostTypeIndex.WhiteItem))
             {
-                String currentColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier1Item);
-                String upgradeColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
-
-                if (index <= 5)
+                if (index <= chanceToBoom)
                 {
                     // Don't drop an item
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Destroyed </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)+ "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Destroyed </color><color=#" + whiteColorHex + ">" + Language.GetString(takenItem.nameToken)+ "</color></style>"
                     });
                 }
-                else if (index >= 86)
+                else if (index >= 1001 - chanceWhiteToGreen)
                 {
                     // Upgrade the item to a green item
                     item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
 
-                    //if (item.GetPickupNameToken)
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + upgradeColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + whiteColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + greenColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
                 else
                 {
                     // Reroll the item to another white item
                     item = tier1DropList[rng.RangeInt(0, tier1DropList.Count)];
+
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + currentColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + whiteColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + whiteColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
             }
             else if (currentCostType.Equals(CostTypeIndex.GreenItem))
             {
-                String previousColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier1Item);
-                String currentColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
-                String upgradeColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
-
-                if (index <= 20)
+                if (index <= chanceGreenToWhite)
                 {
                     // Downgrade to a white item
                     item = tier1DropList[rng.RangeInt(0, tier1DropList.Count)];
+
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + previousColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + greenColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + whiteColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
-                else if (index >= 91)
+                else if (index >= 1001 - chanceGreenToRed)
                 {
                     // Upgrade the item to a red item
                     item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
+
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + upgradeColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Upgraded </color><color=#" + greenColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + redColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
                 else
                 {
                     // Reroll the item to another green item
                     item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
+
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + currentColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + greenColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + greenColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
             }
             else if (currentCostType.Equals(CostTypeIndex.RedItem))
             {
-                String previousColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
-                String currentColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
-
-                if (index <= 30)
+                if (index <= chanceRedToGreen)
                 {
                     // Downgrade to a green item
                     item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
+
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + previousColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Downgraded </color><color=#" + redColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + greenColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
                 else
                 {
                     // Reroll the item to another red item
                     item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
+
                     Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + currentColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + currentColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + redColorHex + ">" + Language.GetString(takenItem.nameToken)
+                        + "</color><color=#307FFF> to </color><color=#" + redColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
                     });
                 }
             }
