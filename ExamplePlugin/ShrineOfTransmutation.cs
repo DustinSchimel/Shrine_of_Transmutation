@@ -118,7 +118,7 @@ namespace ShrineOfTransmutation
 
             // The renderer that will be highlighted by our Highlight component
             // idk if this is working
-            shrineOfTransmutation.GetComponent<Highlight>().targetRenderer = shrineOfTransmutation.GetComponentInChildren<SkinnedMeshRenderer>();
+            shrineOfTransmutation.GetComponent<Highlight>().targetRenderer = shrineOfTransmutation.GetComponentInChildren<MeshRenderer>();
 
             // EntityLocator is necessary for the interactable highlight
             shrineOfTransmutation.transform.GetChild(0).gameObject.AddComponent<EntityLocator>().entity = shrineOfTransmutation;
