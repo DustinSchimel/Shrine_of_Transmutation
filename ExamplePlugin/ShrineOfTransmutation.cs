@@ -7,99 +7,46 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
-using UnityEngine.UIElements.UIR;
-using System.IO;
 using System.Reflection;
-using System.Linq;
-
-//using BepInEx;
-using BepInEx.Configuration;
-using BepInEx.Logging;
-//using R2API;
-using R2API.Utils;
-//using RoR2;
-//using UnityEngine;
-//using RiskOfOptions;
-//using RiskOfOptions.Options;
-//using RiskOfOptions.OptionConfigs;
-using RoR2.CharacterAI;
-using static RoR2.ColorCatalog;
-//using System.Linq;
 
 namespace ShrineOfTransmutation
 {
-    // This attribute specifies that we have a dependency on a given BepInEx Plugin,
-    // We need the R2API ItemAPI dependency because we are using for adding our item to the game.
-    // You don't need this if you're not using R2API in your plugin,
-    // it's just to tell BepInEx to initialize R2API before this plugin so it's safe to use R2API.
     [BepInDependency(ItemAPI.PluginGUID)]
-
-    // This one is because we use a .language file for language tokens
-    // More info in https://risk-of-thunder.github.io/R2Wiki/Mod-Creation/Assets/Localization/
     [BepInDependency(LanguageAPI.PluginGUID)]
-
-    // This attribute is required, and lists metadata for your plugin.
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
 
-    // This is the main declaration of our plugin class.
-    // BepInEx searches for all classes inheriting from BaseUnityPlugin to initialize on startup.
-    // BaseUnityPlugin itself inherits from MonoBehaviour,
-    // so you can use this as a reference for what you can declare and use in your plugin class
-    // More information in the Unity Docs: https://docs.unity3d.com/ScriptReference/MonoBehaviour.html
     public class ShrineOfTransmutation : BaseUnityPlugin
     {
-        // The Plugin GUID should be a unique ID for this plugin,
-        // which is human readable (as it is used in places like the config).
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Xerphy";
         public const string PluginName = "ShrineOfTransmutation";
-        public const string PluginVersion = "0.5";
-        public AssetBundle mainAssetBundle;
+        public const string PluginVersion = "1.0.0";
 
+        private AssetBundle mainAssetBundle;
         private GameObject shrineOfTransmutation;
 
-        // The Awake() method is run at the very start when the game is initialized.
         public void Awake()
         {
             mainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("ShrineOfTransmutation.dll", "shrineoftransmutationbundle"));
 
-            if (mainAssetBundle == null)
-            {
-                Debug.Log("Asset bundle not found");
-            }
-            else
-            {
-                Debug.Log("Asset bundle found");
-            }
+            shrineOfTransmutation = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ShrineOfTransmutation/ShrineOfTransmutationAssets/ShrineOfTransmutation.prefab"), "ShrineOfTransmutationModel");
 
-            shrineOfTransmutation = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ShrineOfTransmutation/ShrineOfTransmutationAssets/TempCube.prefab"), "ShrineOfTransmutationModel");
-
-            if (shrineOfTransmutation == null)
-            {
-                Debug.Log("Shrine of Transmutation not instantiated");
-            }
-            else
-            {
-                Debug.Log("Shrine of Transmutation instantiated");
-            }
-
-            // Init our logging class so that we can properly log for debugging
+            // Initialize the logging class so that we can properly log for debugging
             Log.Init(Logger);
 
             #region Prepping the Asset
 
             // In-game name
-            shrineOfTransmutation.name = "Shrine of Transmutation";
+            shrineOfTransmutation.name = "ShrineOfTransmutation";
 
             // Added for for multiplayer compatability
             shrineOfTransmutation.AddComponent<NetworkIdentity>();
 
-            // Scaling the model up
-            //shrineOfTransmutation.transform.localScale = new Vector3(1f, 1f, 1f);
             #endregion
 
             #region Adding interaction
-            // Add main necessary component PurchaseInteraction, this will add a Highlight component as well
+
+            // Adds the main necessary component PurchaseInteraction, this will add a Highlight component as well
             PurchaseInteraction interaction = shrineOfTransmutation.AddComponent<PurchaseInteraction>();
 
             ShrineOfTransmutationManager mgr = shrineOfTransmutation.AddComponent<ShrineOfTransmutationManager>();
@@ -116,29 +63,28 @@ namespace ShrineOfTransmutation
 
             mgr.purchaseInteraction = interaction;
 
-            // The renderer that will be highlighted by our Highlight component
+            // The renderer that will be highlighted by the Highlight component
             shrineOfTransmutation.GetComponent<Highlight>().targetRenderer = shrineOfTransmutation.GetComponentInChildren<MeshRenderer>();
 
             // EntityLocator is necessary for the interactable highlight
             shrineOfTransmutation.transform.GetChild(0).gameObject.AddComponent<EntityLocator>().entity = shrineOfTransmutation;
             #endregion
 
-            //ShopTerminalBehavior terminalBehavior = shrineOfTransmutation.AddComponent<ShopTerminalBehavior>();
-
             #region SpawnCard
+
             InteractableSpawnCard interactableSpawnCard = ScriptableObject.CreateInstance<InteractableSpawnCard>();
             interactableSpawnCard.name = "iscShrineOfTransmutation";
             interactableSpawnCard.prefab = shrineOfTransmutation;
             interactableSpawnCard.sendOverNetwork = true;
             // The size of the interactable, there's Human, Golem, and BeetleQueen
-            interactableSpawnCard.hullSize = HullClassification.Human;
+            interactableSpawnCard.hullSize = HullClassification.Golem;
             // Which nodegraph should it spawn on, air or ground
             interactableSpawnCard.nodeGraphType = RoR2.Navigation.MapNodeGroup.GraphType.Ground;
             interactableSpawnCard.requiredFlags = RoR2.Navigation.NodeFlags.None;
-            // Nodes have flags that help define what can be spawned on it, any node marked "NoShrineSpawn" shouldn't spawn our shrine on it
+            // Nodes have flags that help define what can be spawned on it, any node marked "NoShrineSpawn" shouldn't spawn the shrine on it
             interactableSpawnCard.forbiddenFlags = RoR2.Navigation.NodeFlags.NoShrineSpawn;
-            // How much should it cost the director to spawn your interactable
-            interactableSpawnCard.directorCreditCost = 0;
+            // How much should it cost the director to spawn the interactable
+            interactableSpawnCard.directorCreditCost = 5;
             interactableSpawnCard.occupyPosition = true;
             interactableSpawnCard.orientToFloor = false;
             interactableSpawnCard.skipSpawnWhenSacrificeArtifactEnabled = false;
@@ -146,7 +92,7 @@ namespace ShrineOfTransmutation
 
             DirectorCard directorCard = new DirectorCard
             {
-                selectionWeight = 1000, // The higher this number the more common it'll be, for reference a normal chest is about 230
+                selectionWeight = 10, // The higher this number the more common it'll be, for reference a normal chest is about 230
                 spawnCard = interactableSpawnCard,
             };
 
@@ -158,12 +104,6 @@ namespace ShrineOfTransmutation
 
             // Registers the interactable on every stage
             DirectorAPI.Helpers.AddNewInteractable(directorCardHolder);
-        }
-
-        // The Update() method is run on every frame of the game.
-        private void Update()
-        {
-
         }
     }
 
@@ -179,7 +119,7 @@ namespace ShrineOfTransmutation
 
         public float dropUpVelocityStrength = 20f;
 
-        public float dropForwardVelocityStrength = 2f;
+        public float dropForwardVelocityStrength = 2.5f;
 
         private ArrayList rngArrayItems;
 
@@ -196,10 +136,7 @@ namespace ShrineOfTransmutation
                 purchaseInteraction.SetAvailable(true);
             }
 
-            //purchaseInteraction.costType = CostTypeIndex.WhiteItem;
-            //purchaseInteraction.automaticallyScaleCostWithDifficulty = true;
-            //purchaseInteraction.ShouldShowOnScanner(true);
-            //purchaseInteraction.cost = 50;
+            purchaseInteraction.ShouldShowOnScanner();
             purchaseInteraction.onPurchase.AddListener(OnPurchase);
         }
 
@@ -224,6 +161,7 @@ namespace ShrineOfTransmutation
 
             if (!CanBeAffordedByInteractor(interactor))
             {
+                // Add sound effect here
                 return;
             }
 
@@ -240,7 +178,6 @@ namespace ShrineOfTransmutation
             CharacterBody character = interactor.GetComponent<CharacterBody>();
             CostTypeDef costTypeDef = RandomizeCostType(interactor);
             ItemIndex itemIndex = ItemIndex.None;
-            //ShopTerminalBehavior component2 = GetComponent<ShopTerminalBehavior>();
 
             CostTypeDef.PayCostResults payCostResults = costTypeDef.PayCost(1, interactor, base.gameObject, rng, itemIndex);
             CreateItemTakenOrb(character.corePosition, base.gameObject, payCostResults.itemsTaken[0]);
@@ -248,6 +185,7 @@ namespace ShrineOfTransmutation
             StartCoroutine(Delay());
         }
 
+        [Server]
         IEnumerator Delay()
         {
             yield return new WaitForSeconds(1.5f);
@@ -413,12 +351,6 @@ namespace ShrineOfTransmutation
                 rngArrayItems.Add(CostTypeIndex.WhiteItem);
             }
 
-            if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.WhiteItem).IsAffordable(1, activator))
-            {
-                hasWhiteItem = true;
-                rngArrayItems.Add(CostTypeIndex.WhiteItem);
-            }
-
             if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.GreenItem).IsAffordable(1, activator))
             {
                 hasGreenItem = true;
@@ -476,7 +408,7 @@ namespace ShrineOfTransmutation
                 if (character.inventory.GetItemCount(regenScrap) > 0)
                 {
                     hasRegenScrap = true;
-                    // only add regen scrap as an option if green scrap was not already in there, since adding both could make it favor using green scrap
+                    // Only add regen scrap as an option if green scrap was not already in there, since adding both could make it favor using green scrap
                     if (!rngArrayScrap.Contains(CostTypeIndex.GreenItem))
                     {
                         rngArrayScrap.Add(CostTypeIndex.GreenItem);
@@ -494,7 +426,7 @@ namespace ShrineOfTransmutation
             int index;
             CostTypeIndex costType;
 
-            // if player has scrap, use that instead. If they have multiple of different colors, pick one randomly. Else, just use an item of random color.
+            // If player has scrap, use that instead. If they have multiple of different colors, pick one randomly. Else, just use an item of random color.
             if (CheckForScrap(activator))
             {
                 index = rng.RangeInt(0, rngArrayScrap.Count);
