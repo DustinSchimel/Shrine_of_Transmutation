@@ -1,8 +1,8 @@
 ﻿{
-	"name": "Risk of Gambling",
-	"version_number": "0.2.0",
+	"name": "Shrine_of_Transmutation",
+	"version_number": "1.0.0",
 	"website_url": "",
-	"description": "WIP mod",
+	"description": "Shrine that lets you reroll white, green, and red items. With a chance to upgrade them, downgrade them, or even lose them!",
 	"dependencies": [
 		"bbepis-BepInExPack-5.4.2108",
 		"RiskofThunder-HookGenPatcher-1.2.3",

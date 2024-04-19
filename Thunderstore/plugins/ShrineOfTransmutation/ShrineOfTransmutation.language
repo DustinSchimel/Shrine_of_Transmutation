@@ -1,0 +1,14 @@
+{
+  "strings": {
+    "SHRINE_NEAR_TOKEN": "THIS IS A WIP LANGUAGE FILE!",
+    "SHRINE_PING_TOKEN": "FBDL Shrine of Transmutation (<color=#" + t1ColorHex + ">1 It</color><color=#" + t2ColorHex + ">em</color><color=#" + t3ColorHex + ">(s)</color><style=cIsDamage>)"
+  },
+  "FR": {
+    "SHRINE_NEAR_TOKEN": "FRENCH Use Shrine of Transmutation (<color=#" + t1ColorHex + ">1 It</color><color=#" + t2ColorHex + ">em</color><color=#" + t3ColorHex + ">(s)</color><style=cIsDamage>)",
+    "SHRINE_PING_TOKEN": "FRENCH Shrine of Transmutation (<color=#" + t1ColorHex + ">1 It</color><color=#" + t2ColorHex + ">em</color><color=#" + t3ColorHex + ">(s)</color><style=cIsDamage>)"
+  },
+  "en": {
+    "SHRINE_NEAR_TOKEN": "ENGLISH Use Shrine of Transmutation (<color=#" + t1ColorHex + ">1 It</color><color=#" + t2ColorHex + ">em</color><color=#" + t3ColorHex + ">(s)</color><style=cIsDamage>)",
+    "SHRINE_PING_TOKEN": "ENGLISH Shrine of Transmutation (<color=#" + t1ColorHex + ">1 It</color><color=#" + t2ColorHex + ">em</color><color=#" + t3ColorHex + ">(s)</color><style=cIsDamage>)"
+  }
+}
