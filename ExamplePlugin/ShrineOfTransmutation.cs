@@ -327,15 +327,19 @@ namespace ShrineOfTransmutation
 
             dropPickup = RollDrop();
 
-            float angle = 360f;
-            Vector3 vector = Vector3.up * dropUpVelocityStrength + dropTransform.forward * dropForwardVelocityStrength;
-            Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
+            if (dropPickup != PickupIndex.none)
+            {
+                float angle = 360f;
+                Vector3 vector = Vector3.up * dropUpVelocityStrength + dropTransform.forward * dropForwardVelocityStrength;
+                Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
 
-            PickupDropletController.CreatePickupDroplet(dropPickup, dropTransform.position + Vector3.up * 1.5f, vector);
+                PickupDropletController.CreatePickupDroplet(dropPickup, dropTransform.position + Vector3.up * 1.5f, vector);
 
-            vector = quaternion * vector;
+                vector = quaternion * vector;
 
-            dropPickup = PickupIndex.none;
+                dropPickup = PickupIndex.none;
+            }
+
             currentCostType = CostTypeIndex.None;
         }
 
