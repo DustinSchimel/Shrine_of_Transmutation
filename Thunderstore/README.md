@@ -15,6 +15,7 @@ Risk Of Options support
 1.0.1
 
 Fixed null/invisible items from dropping
+
 Removed unneeded dependencies
 
 

@@ -18,7 +18,7 @@ namespace ShrineOfTransmutation
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Xerphy";
         public const string PluginName = "ShrineOfTransmutation";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.1";
 
         private AssetBundle mainAssetBundle;
         private GameObject shrineOfTransmutation;
