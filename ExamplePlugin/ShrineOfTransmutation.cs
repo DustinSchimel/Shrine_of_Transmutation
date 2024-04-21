@@ -11,8 +11,6 @@ using System.Reflection;
 
 namespace ShrineOfTransmutation
 {
-    [BepInDependency(ItemAPI.PluginGUID)]
-    [BepInDependency(LanguageAPI.PluginGUID)]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
 
     public class ShrineOfTransmutation : BaseUnityPlugin
