@@ -18,7 +18,7 @@ namespace ShrineOfTransmutation
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Xerphy";
         public const string PluginName = "ShrineOfTransmutation";
-        public const string PluginVersion = "1.0.1";
+        public const string PluginVersion = "1.1.0";
 
         private AssetBundle mainAssetBundle;
         private GameObject shrineOfTransmutation;
@@ -127,6 +127,21 @@ namespace ShrineOfTransmutation
 
         private ItemDef takenItem;
 
+        private bool chanceToDestroyItem = true;
+
+        public void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                chanceToDestroyItem = !chanceToDestroyItem;
+
+                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                {
+                    baseToken = "<style=cEvent>Set chanceToDestoryItem to " + chanceToDestroyItem + "</style>"
+                });
+            }
+        }
+
         public void Start()
         {
             if (NetworkServer.active && Run.instance)
@@ -198,7 +213,7 @@ namespace ShrineOfTransmutation
             PickupIndex item = PickupIndex.none;
 
             // All probabilities. int/10%
-            int chanceToBoom = 50;          //5%
+            int chanceToBoom = 500;          //5%
             int chanceWhiteToGreen = 150;   //15%
             //int chanceWhiteToWhite = 800;   //80%
 
@@ -216,6 +231,13 @@ namespace ShrineOfTransmutation
             String whiteColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier1Item);
             String greenColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
             String redColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
+
+            if (!chanceToDestroyItem)
+            {
+                chanceToBoom = 0;
+                chanceWhiteToGreen = 175;
+                //int chanceWhiteToWhite = 825;
+            }
 
             if (currentCostType.Equals(CostTypeIndex.WhiteItem))
             {
