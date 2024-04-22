@@ -391,12 +391,11 @@ namespace ShrineOfTransmutation
             return hasWhiteItem || hasGreenItem || hasRedItem;
         }
 
-        public bool CheckForScrap(Interactor activator)
+        public CostTypeIndex CheckForScrap(Interactor activator, CostTypeIndex costType)
         {
             bool hasWhiteScrap = false;
             bool hasGreenScrap = false;
             bool hasRedScrap = false;
-            bool hasRegenScrap = false;
 
             CharacterBody character = activator.GetComponent<CharacterBody>();
 
@@ -405,56 +404,75 @@ namespace ShrineOfTransmutation
             ItemIndex redScrap = ItemCatalog.FindItemIndex("ScrapRed");
             ItemIndex regenScrap = ItemCatalog.FindItemIndex("RegeneratingScrap");
 
+            int whiteScrapCount = character.inventory.GetItemCount(whiteScrap);
+            int greenScrapCount = character.inventory.GetItemCount(greenScrap);
+            int redScrapCount = character.inventory.GetItemCount(redScrap);
+            int regenScrapCount = character.inventory.GetItemCount(regenScrap);
+            int scrapTotal;
+
             if (character.inventory)
             {
-                // Find out how much white scrap we have
-                if (character.inventory.GetItemCount(whiteScrap) > 0)
+                if (whiteScrapCount > 0)
                 {
                     hasWhiteScrap = true;
-                    rngArrayScrap.Add(CostTypeIndex.WhiteItem);
                 }
 
-                // Find out how much green scrap we have
-                if (character.inventory.GetItemCount(greenScrap) > 0)
+                if (greenScrapCount > 0)
                 {
                     hasGreenScrap = true;
-                    rngArrayScrap.Add(CostTypeIndex.GreenItem);
                 }
 
-                // Find out how much red scrap we have
-                if (character.inventory.GetItemCount(redScrap) > 0)
+                if (redScrapCount > 0)
                 {
                     hasRedScrap = true;
-                    rngArrayScrap.Add(CostTypeIndex.RedItem);
                 }
 
-                // Find out how much regenerating scrap we have
-                if (character.inventory.GetItemCount(regenScrap) > 0)
+                if (regenScrapCount > 0)
                 {
-                    hasRegenScrap = true;
-                    // Only add regen scrap as an option if green scrap was not already in there, since adding both could make it favor using green scrap
-                    if (!rngArrayScrap.Contains(CostTypeIndex.GreenItem))
-                    {
-                        rngArrayScrap.Add(CostTypeIndex.GreenItem);
-                    }
+                    costType = CostTypeIndex.GreenItem;
+
+                    return costType;
+                }
+
+                scrapTotal = whiteScrapCount + greenScrapCount + redScrapCount;
+
+                int index = rng.RangeInt(0, scrapTotal);
+
+                if (index < whiteScrapCount && hasWhiteScrap)
+                {
+                    // Use white scrap
+                    costType = CostTypeIndex.WhiteItem;
+
+                }
+                else if (index >= scrapTotal - redScrapCount && hasRedScrap)
+                {
+                    // Use red scrap
+                    costType = CostTypeIndex.RedItem;
+                }
+                else if (hasGreenScrap)
+                {
+                    // Use green scrap
+                    costType = CostTypeIndex.GreenItem;
+                }
+                else
+                {
                 }
             }
 
-            // Determines if the player can afford to use scrap (checking if they have at least 1 white, green, red or regenerating scrap). 
-            return hasWhiteScrap || hasGreenScrap || hasRedScrap || hasRegenScrap;
+            return costType;
         }
 
 
         public CostTypeDef RandomizeCostType(Interactor activator)
         {
             int index;
-            CostTypeIndex costType;
+            CostTypeIndex costType = CostTypeIndex.None;
 
             // If player has scrap, use that instead. If they have multiple of different colors, pick one randomly. Else, just use an item of random color.
-            if (CheckForScrap(activator))
+            if (CheckForScrap(activator, costType) != CostTypeIndex.None)
             {
                 index = rng.RangeInt(0, rngArrayScrap.Count);
-                costType = (CostTypeIndex)rngArrayScrap[index];
+                //costType = (CostTypeIndex)rngArrayScrap[index];
             }
             else
             {
