@@ -9,6 +9,8 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using System.Reflection;
 using RiskOfOptions;
+using BepInEx.Configuration;
+using RiskOfOptions.Options;
 
 namespace ShrineOfTransmutation
 {
@@ -17,6 +19,12 @@ namespace ShrineOfTransmutation
 
     public class ShrineOfTransmutation : BaseUnityPlugin
     {
+        public static ConfigEntry<bool> importantAlert { get; set; }
+        public static ConfigEntry<bool> chanceToDestroyItem { get; set; }
+        public static ConfigEntry<bool> chanceToDowngradeItem { get; set; }
+        public static ConfigEntry<bool> chanceToUpgradeItem { get; set; }
+        public static ConfigEntry<bool> canDestroyAtAllTiers { get; set; }
+
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "Xerphy";
         public const string PluginName = "ShrineOfTransmutation";
@@ -104,6 +112,46 @@ namespace ShrineOfTransmutation
 
             // Registers the interactable on every stage
             DirectorAPI.Helpers.AddNewInteractable(directorCardHolder);
+
+            #region Adding config options
+
+            chanceToDestroyItem = Config.Bind<bool>(
+            "General",
+            "IMPORTANT",
+            true,
+            "Everyone needs to have the same options for multiplayer."
+            );
+
+            chanceToDestroyItem = Config.Bind<bool>(
+            "General",
+            "Enable item destruction at tier 1",
+            true,
+            "Toggleable option for if items should have a chance to be destroyed."
+            );
+
+            canDestroyAtAllTiers = Config.Bind<bool>(
+            "General",
+            "Enable item destruction at all tiers",
+            false,
+            "Toggleable option for if items should have a chance to be destroyed at all tiers. chanceToDestroyItem must be toggled to true for this to work."
+            );
+
+            chanceToDowngradeItem = Config.Bind<bool>(
+            "General",
+            "Enable item downgrading",
+            true,
+            "Toggleable option for if items should have a chance to be downgraded."
+            );
+
+            chanceToUpgradeItem = Config.Bind<bool>(
+            "General",
+            "Enable item upgrading",
+            true,
+            "Toggleable option for if items should have a chance to be upgraded."
+            );
+
+            mgr.SetConfigValues(chanceToDestroyItem.Value, canDestroyAtAllTiers.Value, chanceToDowngradeItem.Value, chanceToUpgradeItem.Value);
+            #endregion
         }
     }
 
@@ -125,13 +173,14 @@ namespace ShrineOfTransmutation
 
         private ItemDef takenItem;
 
-        private bool chanceToDestroyItem = true;
-        private bool chanceToDowngradeItem = true;
-        private bool chanceToUpgradeItem = true;
-        private bool canDestroyAtAllTiers = false;
+        private bool chanceToDestroyItemVal;
+        private bool canDestroyAtAllTiersVal;
+        private bool chanceToDowngradeItemVal;
+        private bool chanceToUpgradeItemVal;
 
         public void Update()
         {
+            /*
             if (Input.GetKeyDown(KeyCode.F2))
             {
                 chanceToDestroyItem = !chanceToDestroyItem;
@@ -171,6 +220,15 @@ namespace ShrineOfTransmutation
                     baseToken = "<style=cEvent>Set canDestroyAtAllTiers to " + canDestroyAtAllTiers + "</style>"
                 });
             }
+            */
+        }
+
+        public void SetConfigValues(bool firstVal, bool secondVal, bool thirdVal, bool fourthVal)
+        {
+            chanceToDestroyItemVal = firstVal;
+            canDestroyAtAllTiersVal = secondVal;
+            chanceToDowngradeItemVal = thirdVal;
+            chanceToUpgradeItemVal = fourthVal;
         }
 
         public void Start()
@@ -261,18 +319,18 @@ namespace ShrineOfTransmutation
             String greenColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
             String redColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
 
-            if (!chanceToDestroyItem)
+            if (!chanceToDestroyItemVal)
             {
                 chanceToBoom = 0;
             }
 
-            if (!chanceToDowngradeItem)
+            if (!chanceToDowngradeItemVal)
             {
                 chanceGreenToWhite = 0;
                 chanceRedToGreen = 0;
             }
 
-            if (!chanceToUpgradeItem)
+            if (!chanceToUpgradeItemVal)
             {
                 chanceWhiteToGreen = 0;
                 chanceGreenToRed = 0;
@@ -337,7 +395,7 @@ namespace ShrineOfTransmutation
                 }
                 else
                 {
-                    if (canDestroyAtAllTiers)
+                    if (canDestroyAtAllTiersVal)
                     {
                         if (index <= chanceGreenToWhite + chanceToBoom)    // Checked index > chanceGreenToWhite earlier
                         {
@@ -387,7 +445,7 @@ namespace ShrineOfTransmutation
                 }
                 else
                 {
-                    if (canDestroyAtAllTiers)
+                    if (canDestroyAtAllTiersVal)
                     {
                         if (index <= chanceRedToGreen + chanceToBoom)    // Checked index > chanceRedToGreen earlier
                         {
