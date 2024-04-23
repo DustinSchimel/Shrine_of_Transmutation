@@ -124,20 +124,40 @@ namespace ShrineOfTransmutation
         private ItemDef takenItem;
 
         private bool chanceToDestroyItem = true;
+        private bool chanceToDowngradeItem = true;
+        private bool chanceToUpgradeItem = true;
 
         public void Update()
         {
-            /*
             if (Input.GetKeyDown(KeyCode.F2))
             {
                 chanceToDestroyItem = !chanceToDestroyItem;
 
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                 {
-                    baseToken = "<style=cEvent>Set chanceToDestoryItem to " + chanceToDestroyItem + "</style>"
+                    baseToken = "<style=cEvent>Set chanceToDestroyItem to " + chanceToDestroyItem + "</style>"
                 });
             }
-            */
+
+            if (Input.GetKeyDown(KeyCode.F3))
+            {
+                chanceToDowngradeItem = !chanceToDowngradeItem;
+
+                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                {
+                    baseToken = "<style=cEvent>Set chanceToDowngradeItem to " + chanceToDowngradeItem + "</style>"
+                });
+            }
+
+            if (Input.GetKeyDown(KeyCode.F4))
+            {
+                chanceToUpgradeItem = !chanceToUpgradeItem;
+
+                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                {
+                    baseToken = "<style=cEvent>Set chanceToUpgradeItem to " + chanceToUpgradeItem + "</style>"
+                });
+            }
         }
 
         public void Start()
@@ -231,8 +251,18 @@ namespace ShrineOfTransmutation
             if (!chanceToDestroyItem)
             {
                 chanceToBoom = 0;
-                chanceWhiteToGreen = 175;
-                //int chanceWhiteToWhite = 825;
+            }
+
+            if (!chanceToDowngradeItem)
+            {
+                chanceGreenToWhite = 0;
+                chanceRedToGreen = 0;
+            }
+
+            if (!chanceToUpgradeItem)
+            {
+                chanceWhiteToGreen = 0;
+                chanceGreenToRed = 0;
             }
 
             if (currentCostType.Equals(CostTypeIndex.WhiteItem))
