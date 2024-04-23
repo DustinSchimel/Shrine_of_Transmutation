@@ -11,6 +11,8 @@ using System.Reflection;
 using RiskOfOptions;
 using BepInEx.Configuration;
 using RiskOfOptions.Options;
+using RiskOfOptions.OptionConfigs;
+using Newtonsoft.Json.Linq;
 
 namespace ShrineOfTransmutation
 {
@@ -32,12 +34,15 @@ namespace ShrineOfTransmutation
 
         private AssetBundle mainAssetBundle;
         private GameObject shrineOfTransmutation;
+        private Sprite logo;
 
         public void Awake()
         {
             mainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("ShrineOfTransmutation.dll", "shrineoftransmutationbundle"));
 
             shrineOfTransmutation = PrefabAPI.InstantiateClone(mainAssetBundle.LoadAsset<GameObject>("Assets/ShrineOfTransmutation/ShrineOfTransmutationAssets/ShrineOfTransmutation.prefab"), "ShrineOfTransmutationModel");
+
+            logo = mainAssetBundle.LoadAsset<Sprite>("Assets/ShrineOfTransmutation/ShrineOfTransmutationAssets/ShrineOfTransmutationLogo.png");
 
             // Initialize the logging class so that we can properly log for debugging
             Log.Init(Logger);
@@ -115,7 +120,7 @@ namespace ShrineOfTransmutation
 
             #region Adding config options
 
-            chanceToDestroyItem = Config.Bind<bool>(
+            importantAlert = Config.Bind<bool>(
             "General",
             "IMPORTANT",
             true,
@@ -126,31 +131,41 @@ namespace ShrineOfTransmutation
             "General",
             "Enable item destruction at tier 1",
             true,
-            "Toggleable option for if items should have a chance to be destroyed."
+            "Toggle for if items should have a chance to be destroyed."
             );
 
             canDestroyAtAllTiers = Config.Bind<bool>(
             "General",
             "Enable item destruction at all tiers",
             false,
-            "Toggleable option for if items should have a chance to be destroyed at all tiers. chanceToDestroyItem must be toggled to true for this to work."
+            "Toggle for if items should have a chance to be destroyed at all tiers. 'Enable item destruction at tier 1' must be toggled to true for this to work."
             );
 
             chanceToDowngradeItem = Config.Bind<bool>(
             "General",
             "Enable item downgrading",
             true,
-            "Toggleable option for if items should have a chance to be downgraded."
+            "Toggle for if items should have a chance to be downgraded."
             );
 
             chanceToUpgradeItem = Config.Bind<bool>(
             "General",
             "Enable item upgrading",
             true,
-            "Toggleable option for if items should have a chance to be upgraded."
+            "Toggle for if items should have a chance to be upgraded."
             );
 
-            mgr.SetConfigValues(chanceToDestroyItem.Value, canDestroyAtAllTiers.Value, chanceToDowngradeItem.Value, chanceToUpgradeItem.Value);
+            ModSettingsManager.AddOption(new CheckBoxOption(importantAlert));
+            ModSettingsManager.AddOption(new CheckBoxOption(chanceToDestroyItem));
+
+            //ModSettingsManager.AddOption(new CheckBoxOption(canDestroyAtAllTiers, new CheckBoxConfig() { checkIfEnabled = chanceToDestroyItem }));
+            ModSettingsManager.AddOption(new CheckBoxOption(canDestroyAtAllTiers));
+            ModSettingsManager.AddOption(new CheckBoxOption(chanceToDowngradeItem));
+            ModSettingsManager.AddOption(new CheckBoxOption(chanceToUpgradeItem));
+
+            ModSettingsManager.SetModDescription("Shrine that lets you reroll white, green, and red items. With a chance to upgrade them, downgrade them, or even destroy them!");
+
+            ModSettingsManager.SetModIcon(logo);
             #endregion
         }
     }
@@ -173,62 +188,39 @@ namespace ShrineOfTransmutation
 
         private ItemDef takenItem;
 
-        private bool chanceToDestroyItemVal;
-        private bool canDestroyAtAllTiersVal;
-        private bool chanceToDowngradeItemVal;
-        private bool chanceToUpgradeItemVal;
-
         public void Update()
         {
-            /*
             if (Input.GetKeyDown(KeyCode.F2))
             {
-                chanceToDestroyItem = !chanceToDestroyItem;
-
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                 {
-                    baseToken = "<style=cEvent>Set chanceToDestroyItem to " + chanceToDestroyItem + "</style>"
+                    baseToken = "<style=cEvent>chanceToDestroyItemVal " + ShrineOfTransmutation.chanceToDestroyItem.Value + "</style>"
                 });
             }
 
             if (Input.GetKeyDown(KeyCode.F3))
             {
-                chanceToDowngradeItem = !chanceToDowngradeItem;
-
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                 {
-                    baseToken = "<style=cEvent>Set chanceToDowngradeItem to " + chanceToDowngradeItem + "</style>"
+                    baseToken = "<style=cEvent>canDestroyAtAllTiersVal " + ShrineOfTransmutation.canDestroyAtAllTiers.Value + "</style>"
                 });
             }
 
             if (Input.GetKeyDown(KeyCode.F4))
             {
-                chanceToUpgradeItem = !chanceToUpgradeItem;
-
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                 {
-                    baseToken = "<style=cEvent>Set chanceToUpgradeItem to " + chanceToUpgradeItem + "</style>"
+                    baseToken = "<style=cEvent>chanceToDowngradeItemVal " + ShrineOfTransmutation.chanceToDowngradeItem.Value + "</style>"
                 });
             }
 
             if (Input.GetKeyDown(KeyCode.F5))
             {
-                canDestroyAtAllTiers = !canDestroyAtAllTiers;
-
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                 {
-                    baseToken = "<style=cEvent>Set canDestroyAtAllTiers to " + canDestroyAtAllTiers + "</style>"
+                    baseToken = "<style=cEvent>chanceToUpgradeItemVal " + ShrineOfTransmutation.chanceToUpgradeItem.Value + "</style>"
                 });
             }
-            */
-        }
-
-        public void SetConfigValues(bool firstVal, bool secondVal, bool thirdVal, bool fourthVal)
-        {
-            chanceToDestroyItemVal = firstVal;
-            canDestroyAtAllTiersVal = secondVal;
-            chanceToDowngradeItemVal = thirdVal;
-            chanceToUpgradeItemVal = fourthVal;
         }
 
         public void Start()
@@ -319,18 +311,18 @@ namespace ShrineOfTransmutation
             String greenColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier2Item);
             String redColorHex = ColorCatalog.GetColorHexString(ColorCatalog.ColorIndex.Tier3Item);
 
-            if (!chanceToDestroyItemVal)
+            if (!ShrineOfTransmutation.chanceToDestroyItem.Value)
             {
                 chanceToBoom = 0;
             }
 
-            if (!chanceToDowngradeItemVal)
+            if (!ShrineOfTransmutation.chanceToDowngradeItem.Value)
             {
                 chanceGreenToWhite = 0;
                 chanceRedToGreen = 0;
             }
 
-            if (!chanceToUpgradeItemVal)
+            if (!ShrineOfTransmutation.chanceToUpgradeItem.Value)
             {
                 chanceWhiteToGreen = 0;
                 chanceGreenToRed = 0;
@@ -395,7 +387,7 @@ namespace ShrineOfTransmutation
                 }
                 else
                 {
-                    if (canDestroyAtAllTiersVal)
+                    if (ShrineOfTransmutation.canDestroyAtAllTiers.Value)
                     {
                         if (index <= chanceGreenToWhite + chanceToBoom)    // Checked index > chanceGreenToWhite earlier
                         {
@@ -445,7 +437,7 @@ namespace ShrineOfTransmutation
                 }
                 else
                 {
-                    if (canDestroyAtAllTiersVal)
+                    if (ShrineOfTransmutation.canDestroyAtAllTiers.Value)
                     {
                         if (index <= chanceRedToGreen + chanceToBoom)    // Checked index > chanceRedToGreen earlier
                         {
