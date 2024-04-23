@@ -119,10 +119,6 @@ namespace ShrineOfTransmutation
 
         public float dropForwardVelocityStrength = 2.5f;
 
-        private ArrayList rngArrayItems;
-
-        private ArrayList rngArrayScrap;
-
         private CostTypeIndex currentCostType;
 
         private ItemDef takenItem;
@@ -131,6 +127,7 @@ namespace ShrineOfTransmutation
 
         public void Update()
         {
+            /*
             if (Input.GetKeyDown(KeyCode.F2))
             {
                 chanceToDestroyItem = !chanceToDestroyItem;
@@ -140,6 +137,7 @@ namespace ShrineOfTransmutation
                     baseToken = "<style=cEvent>Set chanceToDestoryItem to " + chanceToDestroyItem + "</style>"
                 });
             }
+            */
         }
 
         public void Start()
@@ -156,8 +154,6 @@ namespace ShrineOfTransmutation
         public void Awake()
         {
             rng = new Xoroshiro128Plus(Run.instance.treasureRng.nextUlong);
-            rngArrayItems = new ArrayList();
-            rngArrayScrap = new ArrayList();
             dropTransform = base.transform;
             dropPickup = PickupIndex.none;
             currentCostType = CostTypeIndex.None;
@@ -213,7 +209,7 @@ namespace ShrineOfTransmutation
             PickupIndex item = PickupIndex.none;
 
             // All probabilities. int/10%
-            int chanceToBoom = 500;          //5%
+            int chanceToBoom = 50;          //5%
             int chanceWhiteToGreen = 150;   //15%
             //int chanceWhiteToWhite = 800;   //80%
 
@@ -365,33 +361,122 @@ namespace ShrineOfTransmutation
 
         public bool CanBeAffordedByInteractor(Interactor activator)
         {
-            bool hasWhiteItem = false;
-            bool hasGreenItem = false;
-            bool hasRedItem = false;
-
             if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.WhiteItem).IsAffordable(1, activator))
             {
-                hasWhiteItem = true;
-                rngArrayItems.Add(CostTypeIndex.WhiteItem);
+                return true;
             }
 
             if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.GreenItem).IsAffordable(1, activator))
             {
-                hasGreenItem = true;
-                rngArrayItems.Add(CostTypeIndex.GreenItem);
+                return true;
             }
 
             if (CostTypeCatalog.GetCostTypeDef(CostTypeIndex.RedItem).IsAffordable(1, activator))
             {
-                hasRedItem = true;
-                rngArrayItems.Add(CostTypeIndex.RedItem);
+                return true;
             }
 
-            // Determines if the player can afford to gamble (checking if they have at least 1 white, green, or red item). 
-            return hasWhiteItem || hasGreenItem || hasRedItem;
+            return false;
         }
 
-        public CostTypeIndex CheckForScrap(Interactor activator, CostTypeIndex costType)
+        public CostTypeIndex PickRandomTier(Interactor activator, CostTypeIndex costType)
+        {
+            bool hasWhiteTier = false;
+            bool hasGreenTier = false;
+            bool hasRedTier = false;
+
+            CharacterBody character = activator.GetComponent<CharacterBody>();
+
+            int whiteTierCount = character.inventory.GetTotalItemCountOfTier(ItemTier.Tier1);
+            int greenTierCount = character.inventory.GetTotalItemCountOfTier(ItemTier.Tier2);
+            int redTierCount = character.inventory.GetTotalItemCountOfTier(ItemTier.Tier3);
+            int itemTotal = whiteTierCount + greenTierCount + redTierCount;
+
+            if (character.inventory)
+            {
+                if (whiteTierCount > 0)
+                {
+                    hasWhiteTier = true;
+                }
+
+                if (greenTierCount > 0)
+                {
+                    hasGreenTier = true;
+                }
+
+                if (redTierCount > 0)
+                {
+                    hasRedTier = true;
+                }
+
+                int index = rng.RangeInt(0, itemTotal);
+
+                if (index < whiteTierCount && hasWhiteTier)
+                {
+                    // Use white item
+                    costType = CostTypeIndex.WhiteItem;
+
+                }
+                else if (index >= itemTotal - redTierCount && hasRedTier)
+                {
+                    // Use red item
+                    costType = CostTypeIndex.RedItem;
+                }
+                else if (hasGreenTier)
+                {
+                    // Use green item
+                    costType = CostTypeIndex.GreenItem;
+                }
+                else
+                {
+                }
+            }
+
+            return costType;
+        }
+
+        public bool CanScrapBeUsed(Interactor activator)
+        {
+            bool hasWhiteScrap = false;
+            bool hasGreenScrap = false;
+            bool hasRedScrap = false;
+            bool hasRegenScrap = false;
+
+            CharacterBody character = activator.GetComponent<CharacterBody>();
+
+            ItemIndex whiteScrap = ItemCatalog.FindItemIndex("ScrapWhite");
+            ItemIndex greenScrap = ItemCatalog.FindItemIndex("ScrapGreen");
+            ItemIndex redScrap = ItemCatalog.FindItemIndex("ScrapRed");
+            ItemIndex regenScrap = ItemCatalog.FindItemIndex("RegeneratingScrap");
+
+            if (character.inventory)
+            {
+                if (character.inventory.GetItemCount(whiteScrap) > 0)
+                {
+                    hasWhiteScrap = true;
+                }
+
+                if (character.inventory.GetItemCount(greenScrap) > 0)
+                {
+                    hasGreenScrap = true;
+                }
+
+                if (character.inventory.GetItemCount(redScrap) > 0)
+                {
+                    hasRedScrap = true;
+                }
+
+                if (character.inventory.GetItemCount(regenScrap) > 0)
+                {
+                    hasRegenScrap = true;
+                }
+            }
+
+            // Determines if the player can afford to use scrap (checking if they have at least 1 white, green, red or regenerating scrap). 
+            return hasWhiteScrap || hasGreenScrap || hasRedScrap || hasRegenScrap;
+        }
+
+        public CostTypeIndex PickRandomScrap(Interactor activator)
         {
             bool hasWhiteScrap = false;
             bool hasGreenScrap = false;
@@ -408,7 +493,7 @@ namespace ShrineOfTransmutation
             int greenScrapCount = character.inventory.GetItemCount(greenScrap);
             int redScrapCount = character.inventory.GetItemCount(redScrap);
             int regenScrapCount = character.inventory.GetItemCount(regenScrap);
-            int scrapTotal;
+            int scrapTotal = whiteScrapCount + greenScrapCount + redScrapCount;
 
             if (character.inventory)
             {
@@ -429,59 +514,49 @@ namespace ShrineOfTransmutation
 
                 if (regenScrapCount > 0)
                 {
-                    costType = CostTypeIndex.GreenItem;
-
-                    return costType;
+                    return CostTypeIndex.GreenItem;
                 }
-
-                scrapTotal = whiteScrapCount + greenScrapCount + redScrapCount;
 
                 int index = rng.RangeInt(0, scrapTotal);
 
                 if (index < whiteScrapCount && hasWhiteScrap)
                 {
                     // Use white scrap
-                    costType = CostTypeIndex.WhiteItem;
-
+                    return CostTypeIndex.WhiteItem;
                 }
                 else if (index >= scrapTotal - redScrapCount && hasRedScrap)
                 {
                     // Use red scrap
-                    costType = CostTypeIndex.RedItem;
+                    return CostTypeIndex.RedItem;
                 }
                 else if (hasGreenScrap)
                 {
                     // Use green scrap
-                    costType = CostTypeIndex.GreenItem;
+                    return CostTypeIndex.GreenItem;
                 }
                 else
                 {
+                    return CostTypeIndex.None;
                 }
             }
 
-            return costType;
+            return CostTypeIndex.None;
         }
 
 
         public CostTypeDef RandomizeCostType(Interactor activator)
         {
-            int index;
             CostTypeIndex costType = CostTypeIndex.None;
 
-            // If player has scrap, use that instead. If they have multiple of different colors, pick one randomly. Else, just use an item of random color.
-            if (CheckForScrap(activator, costType) != CostTypeIndex.None)
+            if (CanScrapBeUsed(activator))
             {
-                index = rng.RangeInt(0, rngArrayScrap.Count);
-                //costType = (CostTypeIndex)rngArrayScrap[index];
+                costType = PickRandomScrap(activator);
             }
             else
             {
-                index = rng.RangeInt(0, rngArrayItems.Count);
-                costType = (CostTypeIndex)rngArrayItems[index];
+                costType = PickRandomTier(activator, costType);
             }
 
-            rngArrayItems.Clear();
-            rngArrayScrap.Clear();
             currentCostType = costType;
 
             return CostTypeCatalog.GetCostTypeDef(costType);
