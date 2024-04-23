@@ -12,7 +12,6 @@ using RiskOfOptions;
 using BepInEx.Configuration;
 using RiskOfOptions.Options;
 using RiskOfOptions.OptionConfigs;
-using Newtonsoft.Json.Linq;
 
 namespace ShrineOfTransmutation
 {
@@ -124,7 +123,7 @@ namespace ShrineOfTransmutation
             "General",
             "IMPORTANT",
             true,
-            "Everyone needs to have the same options for multiplayer."
+            "Everyone needs to have the same options for multiplayer. You can change these settings while playing, but don't try that in multiplayer."
             );
 
             chanceToDestroyItem = Config.Bind<bool>(
@@ -158,8 +157,7 @@ namespace ShrineOfTransmutation
             ModSettingsManager.AddOption(new CheckBoxOption(importantAlert));
             ModSettingsManager.AddOption(new CheckBoxOption(chanceToDestroyItem));
 
-            //ModSettingsManager.AddOption(new CheckBoxOption(canDestroyAtAllTiers, new CheckBoxConfig() { checkIfEnabled = chanceToDestroyItem }));
-            ModSettingsManager.AddOption(new CheckBoxOption(canDestroyAtAllTiers));
+            ModSettingsManager.AddOption(new CheckBoxOption(canDestroyAtAllTiers, new CheckBoxConfig() { checkIfDisabled = Check }));
             ModSettingsManager.AddOption(new CheckBoxOption(chanceToDowngradeItem));
             ModSettingsManager.AddOption(new CheckBoxOption(chanceToUpgradeItem));
 
@@ -167,6 +165,11 @@ namespace ShrineOfTransmutation
 
             ModSettingsManager.SetModIcon(logo);
             #endregion
+        }
+
+        private bool Check()
+        {
+            return !chanceToDestroyItem.Value;
         }
     }
 
@@ -187,41 +190,6 @@ namespace ShrineOfTransmutation
         private CostTypeIndex currentCostType;
 
         private ItemDef takenItem;
-
-        public void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.F2))
-            {
-                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
-                {
-                    baseToken = "<style=cEvent>chanceToDestroyItemVal " + ShrineOfTransmutation.chanceToDestroyItem.Value + "</style>"
-                });
-            }
-
-            if (Input.GetKeyDown(KeyCode.F3))
-            {
-                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
-                {
-                    baseToken = "<style=cEvent>canDestroyAtAllTiersVal " + ShrineOfTransmutation.canDestroyAtAllTiers.Value + "</style>"
-                });
-            }
-
-            if (Input.GetKeyDown(KeyCode.F4))
-            {
-                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
-                {
-                    baseToken = "<style=cEvent>chanceToDowngradeItemVal " + ShrineOfTransmutation.chanceToDowngradeItem.Value + "</style>"
-                });
-            }
-
-            if (Input.GetKeyDown(KeyCode.F5))
-            {
-                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
-                {
-                    baseToken = "<style=cEvent>chanceToUpgradeItemVal " + ShrineOfTransmutation.chanceToUpgradeItem.Value + "</style>"
-                });
-            }
-        }
 
         public void Start()
         {

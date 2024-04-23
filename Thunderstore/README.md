@@ -9,16 +9,21 @@ Better sound effects
 
 Multi-language support
 
-Risk Of Options support
-
 ## Changelog
+1.1.0
+
+- Added [Risk of Options](https://thunderstore.io/package/Rune580/Risk_Of_Options/) support
+
+- Fixed issue where the shrine was not truly random
+
+
 1.0.1
 
-Fixed null/invisible items from dropping
+- Fixed null/invisible items from dropping
 
-Removed unneeded dependencies
+- Removed unneeded dependencies
 
 
 1.0.0
 
-Initial release
+- Initial release
