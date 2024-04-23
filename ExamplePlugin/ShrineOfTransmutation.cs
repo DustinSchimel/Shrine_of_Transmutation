@@ -8,9 +8,11 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using System.Reflection;
+using RiskOfOptions;
 
 namespace ShrineOfTransmutation
 {
+    [BepInDependency("com.rune580.riskofoptions")]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
 
     public class ShrineOfTransmutation : BaseUnityPlugin
@@ -126,6 +128,7 @@ namespace ShrineOfTransmutation
         private bool chanceToDestroyItem = true;
         private bool chanceToDowngradeItem = true;
         private bool chanceToUpgradeItem = true;
+        private bool canDestroyAtAllTiers = false;
 
         public void Update()
         {
@@ -156,6 +159,16 @@ namespace ShrineOfTransmutation
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
                 {
                     baseToken = "<style=cEvent>Set chanceToUpgradeItem to " + chanceToUpgradeItem + "</style>"
+                });
+            }
+
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                canDestroyAtAllTiers = !canDestroyAtAllTiers;
+
+                Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                {
+                    baseToken = "<style=cEvent>Set canDestroyAtAllTiers to " + canDestroyAtAllTiers + "</style>"
                 });
             }
         }
@@ -324,14 +337,39 @@ namespace ShrineOfTransmutation
                 }
                 else
                 {
-                    // Reroll the item to another green item
-                    item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
-
-                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                    if (canDestroyAtAllTiers)
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + greenColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + greenColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
-                    });
+                        if (index <= chanceGreenToWhite + chanceToBoom)    // Checked index > chanceGreenToWhite earlier
+                        {
+                            // Don't drop an item
+                            Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                            {
+                                baseToken = "<style=cEvent><color=#307FFF>Destroyed </color><color=#" + greenColorHex + ">" + Language.GetString(takenItem.nameToken) + "</color></style>"
+                            });
+                        }
+                        else
+                        {
+                            // Reroll the item to another green item
+                            item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
+
+                            Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                            {
+                                baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + greenColorHex + ">" + Language.GetString(takenItem.nameToken)
+                                + "</color><color=#307FFF> to </color><color=#" + greenColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // Reroll the item to another green item
+                        item = tier2DropList[rng.RangeInt(0, tier2DropList.Count)];
+
+                        Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                        {
+                            baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + greenColorHex + ">" + Language.GetString(takenItem.nameToken)
+                            + "</color><color=#307FFF> to </color><color=#" + greenColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        });
+                    }
                 }
             }
             else if (currentCostType.Equals(CostTypeIndex.RedItem))
@@ -349,14 +387,39 @@ namespace ShrineOfTransmutation
                 }
                 else
                 {
-                    // Reroll the item to another red item
-                    item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
-
-                    Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                    if (canDestroyAtAllTiers)
                     {
-                        baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + redColorHex + ">" + Language.GetString(takenItem.nameToken)
-                        + "</color><color=#307FFF> to </color><color=#" + redColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
-                    });
+                        if (index <= chanceRedToGreen + chanceToBoom)    // Checked index > chanceRedToGreen earlier
+                        {
+                            // Don't drop an item
+                            Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                            {
+                                baseToken = "<style=cEvent><color=#307FFF>Destroyed </color><color=#" + redColorHex + ">" + Language.GetString(takenItem.nameToken) + "</color></style>"
+                            });
+                        }
+                        else
+                        {
+                            // Reroll the item to another red item
+                            item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
+
+                            Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                            {
+                                baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + redColorHex + ">" + Language.GetString(takenItem.nameToken)
+                                + "</color><color=#307FFF> to </color><color=#" + redColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // Reroll the item to another red item
+                        item = tier3DropList[rng.RangeInt(0, tier3DropList.Count)];
+
+                        Chat.SendBroadcastChat(new Chat.SimpleChatMessage()
+                        {
+                            baseToken = "<style=cEvent><color=#307FFF>Rerolled </color><color=#" + redColorHex + ">" + Language.GetString(takenItem.nameToken)
+                            + "</color><color=#307FFF> to </color><color=#" + redColorHex + ">" + Language.GetString(ItemCatalog.GetItemDef(item.itemIndex).nameToken) + "</color></style>"
+                        });
+                    }
                 }
             }
 
